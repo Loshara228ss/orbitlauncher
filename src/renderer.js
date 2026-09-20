@@ -3010,6 +3010,8 @@ const updateDownloadedText = document.getElementById('update-downloaded-text');
 
 const btnCheckUpdatesManual = document.getElementById('btn-check-updates-manual');
 const btnCheckUpdatesText = document.getElementById('btn-check-updates-text');
+const btnUpdateNowDirect = document.getElementById('btn-update-now-direct');
+const btnUpdateNowText = document.getElementById('btn-update-now-text');
 const updateManualStatus = document.getElementById('update-manual-status');
 
 let latestUpdateData = null;
@@ -3043,6 +3045,16 @@ function closeUpdateModal() {
 if (btnCloseUpdate) btnCloseUpdate.addEventListener('click', closeUpdateModal);
 if (btnCancelUpdate) btnCancelUpdate.addEventListener('click', closeUpdateModal);
 
+if (btnUpdateNowDirect) {
+  btnUpdateNowDirect.addEventListener('click', () => {
+    if (latestUpdateData) {
+      showUpdateModal(latestUpdateData);
+    } else {
+      checkClientUpdates(true);
+    }
+  });
+}
+
 async function checkClientUpdates(isManual = false) {
   if (btnCheckUpdatesManual && isManual) {
     btnCheckUpdatesManual.disabled = true;
@@ -3055,12 +3067,20 @@ async function checkClientUpdates(isManual = false) {
   try {
     const res = await window.electronAPI.checkForUpdates();
     if (res.updateAvailable) {
+      latestUpdateData = res;
       if (updateManualStatus) {
         updateManualStatus.textContent = `Update available: ${res.newVersion}`;
         updateManualStatus.style.color = '#f87171';
       }
+      if (btnUpdateNowDirect) {
+        btnUpdateNowDirect.style.display = 'inline-flex';
+        if (btnUpdateNowText) btnUpdateNowText.textContent = `UPDATE TO ${res.newVersion}`;
+      }
       showUpdateModal(res);
     } else {
+      if (btnUpdateNowDirect) {
+        btnUpdateNowDirect.style.display = 'none';
+      }
       if (updateManualStatus && isManual) {
         updateManualStatus.textContent = res.message || 'Orbit Launcher is up to date!';
         updateManualStatus.style.color = '#22c55e';
