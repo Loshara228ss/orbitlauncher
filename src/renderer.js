@@ -711,20 +711,27 @@ function getVersionCategory(verName) {
   const lower = (verName || '').toLowerCase();
   if (lower.includes('fabric')) return 'fabric';
   if (lower.includes('optifine')) return 'optifine';
-  if (lower.includes('forge') || lower.includes('neoforge')) return 'forge';
+  if (lower.includes('neoforge')) return 'neoforge';
+  if (lower.includes('forge')) return 'forge';
   if (lower.includes('snapshot') || lower.includes('pre-release') || lower.includes('rc') || /^\d\dw\d\d[a-z]$/.test(verName)) {
     return 'snapshots';
   }
   return 'vanilla';
 }
 
-const CATEGORY_ORDER = ['fabric', 'forge', 'optifine', 'vanilla', 'snapshots'];
+const CATEGORY_ORDER = ['fabric', 'neoforge', 'forge', 'optifine', 'vanilla', 'snapshots'];
 const CATEGORY_META = {
   fabric: {
     id: 'fabric',
     label: 'Fabric',
     badgeClass: 'cat-badge-fabric',
     iconSvg: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>`
+  },
+  neoforge: {
+    id: 'neoforge',
+    label: 'NeoForge',
+    badgeClass: 'cat-badge-neoforge',
+    iconSvg: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>`
   },
   forge: {
     id: 'forge',
@@ -766,7 +773,7 @@ function updateButtonState(selectedVer) {
   }
 
   if (xpLevelBadge) {
-    const shortVer = selectedVer.replace(/Fabric|OptiFine|Forge|Minecraft/gi, '').trim();
+    const shortVer = selectedVer.replace(/Fabric|OptiFine|NeoForge|Forge|Minecraft/gi, '').trim();
     xpLevelBadge.textContent = shortVer || selectedVer;
   }
 
@@ -822,6 +829,7 @@ function renderVersionDropdown(items, activeVer) {
 
   const groups = {
     fabric: [],
+    neoforge: [],
     forge: [],
     optifine: [],
     vanilla: [],
@@ -1024,6 +1032,7 @@ function processVersions(data) {
   const installed = data.installed || [];
   const mojang = data.mojang || [];
   const fabric = data.fabric || [];
+  const neoforge = data.neoforge || [];
   const forge = data.forge || [];
   const optifine = data.optifine || [];
   const snapshots = data.snapshots || [];
@@ -1048,7 +1057,15 @@ function processVersions(data) {
     }
   });
 
-  // 3. Forge
+  // 3. NeoForge
+  neoforge.forEach(v => {
+    const exists = allVersionItems.some(i => i.category === 'neoforge' && (i.name === v || i.name.toLowerCase() === v.toLowerCase()));
+    if (!exists) {
+      allVersionItems.push({ name: v, category: 'neoforge', installed: false });
+    }
+  });
+
+  // 4. Forge
   forge.forEach(v => {
     const exists = allVersionItems.some(i => i.category === 'forge' && (i.name === v || i.name.toLowerCase() === v.toLowerCase()));
     if (!exists) {
@@ -2851,6 +2868,37 @@ if (btnSaveNewServer && newServerName && newServerHost) {
     newServerHost.value = '';
     newServerPort.value = '25565';
     updateStatus(`Added server: ${sName}`, 'success');
+  });
+}
+
+// Radmin VPN & LAN Quick Join
+const radminQuickInput = document.getElementById('radmin-quick-input');
+const btnRadminQuickJoin = document.getElementById('btn-radmin-quick-join');
+
+function handleRadminQuickJoin() {
+  if (!radminQuickInput) return;
+  const raw = radminQuickInput.value.trim();
+  if (!raw) {
+    updateStatus('Enter Radmin VPN IP:Port (e.g. 26.154.21.90:54321)', 'warn');
+    return;
+  }
+  let host = raw;
+  let port = 25565;
+  if (raw.includes(':')) {
+    const parts = raw.split(':');
+    host = parts[0].trim();
+    port = parseInt(parts[1], 10) || 25565;
+  }
+  updateStatus(`Direct connecting to Radmin VPN server ${host}:${port}...`, 'info');
+  startLaunch({ host, port });
+}
+
+if (btnRadminQuickJoin) {
+  btnRadminQuickJoin.addEventListener('click', handleRadminQuickJoin);
+}
+if (radminQuickInput) {
+  radminQuickInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') handleRadminQuickJoin();
   });
 }
 

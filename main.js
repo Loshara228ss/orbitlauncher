@@ -243,6 +243,16 @@ const POPULAR_FORGE_RELEASES = ALL_OFFICIAL_RELEASES
   })
   .map(v => `Forge ${v}`);
 
+const POPULAR_NEOFORGE_RELEASES = [
+  'NeoForge 1.21.4',
+  'NeoForge 1.21.3',
+  'NeoForge 1.21.1',
+  'NeoForge 1.21',
+  'NeoForge 1.20.6',
+  'NeoForge 1.20.4',
+  'NeoForge 1.20.2'
+];
+
 const FALLBACK_FABRIC_RELEASES = ALL_OFFICIAL_RELEASES
   .filter(v => {
     const p = v.split('.');
@@ -335,6 +345,150 @@ async function ensureFabricProfile(gameDir, selectedVersion) {
     return true;
   } catch (err) {
     console.error(`Failed to auto-generate Fabric profile for ${selectedVersion}:`, err);
+    return false;
+  }
+}
+
+async function ensureForgeProfile(gameDir, selectedVersion, sendStatus) {
+  const targetDir = path.join(gameDir, 'versions', selectedVersion);
+  const targetJson = path.join(targetDir, `${selectedVersion}.json`);
+  if (fs.existsSync(targetJson)) {
+    sanitizeVersionJson(gameDir, selectedVersion);
+    return true;
+  }
+
+  const match = selectedVersion.match(/(\d+\.\d+(\.\d+)?)/);
+  if (!match) return false;
+  const mcVer = match[1];
+
+  if (sendStatus) sendStatus(`Downloading Forge loader profile for Minecraft ${mcVer}...`, 'info');
+
+  try {
+    const res = await fetch(`https://bmclapi2.bangbang93.com/forge/minecraft/${mcVer}`);
+    if (!res.ok) throw new Error(`BMCLAPI Forge list HTTP ${res.status}`);
+    const list = await res.json();
+    if (!Array.isArray(list) || list.length === 0) throw new Error('No Forge versions found for ' + mcVer);
+
+    const latest = list[list.length - 1] || list[0];
+    const forgeVer = latest.version;
+    const dlUrl = `https://bmclapi2.bangbang93.com/forge/download?mcversion=${mcVer}&version=${forgeVer}&category=installer&format=jar`;
+
+    if (sendStatus) sendStatus(`Downloading Forge ${forgeVer} installer...`, 'info');
+    const installerRes = await fetch(dlUrl);
+    if (!installerRes.ok) throw new Error(`Forge download HTTP ${installerRes.status}`);
+    const installerBuffer = Buffer.from(await installerRes.arrayBuffer());
+
+    const zip = new AdmZip(installerBuffer);
+    const vEntry = zip.getEntry('version.json');
+    if (!vEntry) throw new Error('version.json missing in Forge installer');
+
+    const vJson = JSON.parse(vEntry.getData().toString('utf8'));
+    vJson.id = selectedVersion;
+    if (!vJson.inheritsFrom) vJson.inheritsFrom = mcVer;
+
+    if (!fs.existsSync(targetDir)) {
+      fs.mkdirSync(targetDir, { recursive: true });
+    }
+    fs.writeFileSync(targetJson, JSON.stringify(vJson, null, 2), 'utf8');
+
+    // Extract bundled maven libraries from installer into gameDir/libraries
+    try {
+      const zipEntries = zip.getEntries();
+      for (const entry of zipEntries) {
+        if (!entry.isDirectory && entry.entryName.startsWith('maven/')) {
+          const relPath = entry.entryName.substring('maven/'.length);
+          const destPath = path.join(gameDir, 'libraries', relPath);
+          const destDir = path.dirname(destPath);
+          if (!fs.existsSync(destDir)) fs.mkdirSync(destDir, { recursive: true });
+          fs.writeFileSync(destPath, entry.getData());
+        }
+      }
+    } catch (zipErr) {
+      console.warn('Could not extract bundled maven libraries:', zipErr.message);
+    }
+
+    const installersDir = path.join(gameDir, 'installers');
+    if (!fs.existsSync(installersDir)) fs.mkdirSync(installersDir, { recursive: true });
+    fs.writeFileSync(path.join(installersDir, `forge-${mcVer}-${forgeVer}-installer.jar`), installerBuffer);
+
+    sanitizeVersionJson(gameDir, selectedVersion);
+    if (sendStatus) sendStatus(`Forge ${forgeVer} profile configured successfully!`, 'success');
+    return true;
+  } catch (err) {
+    console.error(`Failed to auto-setup Forge for ${selectedVersion}:`, err);
+    if (sendStatus) sendStatus(`Notice: Could not auto-download Forge profile (${err.message}). Safe launch mode active.`, 'warn');
+    return false;
+  }
+}
+
+async function ensureNeoForgeProfile(gameDir, selectedVersion, sendStatus) {
+  const targetDir = path.join(gameDir, 'versions', selectedVersion);
+  const targetJson = path.join(targetDir, `${selectedVersion}.json`);
+  if (fs.existsSync(targetJson)) {
+    sanitizeVersionJson(gameDir, selectedVersion);
+    return true;
+  }
+
+  const match = selectedVersion.match(/(\d+\.\d+(\.\d+)?)/);
+  if (!match) return false;
+  const mcVer = match[1];
+
+  if (sendStatus) sendStatus(`Downloading NeoForge loader profile for Minecraft ${mcVer}...`, 'info');
+
+  try {
+    const res = await fetch(`https://bmclapi2.bangbang93.com/neoforge/list/${mcVer}`);
+    if (!res.ok) throw new Error(`BMCLAPI NeoForge list HTTP ${res.status}`);
+    const list = await res.json();
+    if (!Array.isArray(list) || list.length === 0) throw new Error('No NeoForge versions found for ' + mcVer);
+
+    const latest = list[list.length - 1] || list[0];
+    const neoVer = latest.version;
+    const dlUrl = `https://bmclapi2.bangbang93.com/maven/net/neoforged/neoforge/${neoVer}/neoforge-${neoVer}-installer.jar`;
+
+    if (sendStatus) sendStatus(`Downloading NeoForge ${neoVer} installer...`, 'info');
+    const installerRes = await fetch(dlUrl);
+    if (!installerRes.ok) throw new Error(`NeoForge download HTTP ${installerRes.status}`);
+    const installerBuffer = Buffer.from(await installerRes.arrayBuffer());
+
+    const zip = new AdmZip(installerBuffer);
+    const vEntry = zip.getEntry('version.json');
+    if (!vEntry) throw new Error('version.json missing in NeoForge installer');
+
+    const vJson = JSON.parse(vEntry.getData().toString('utf8'));
+    vJson.id = selectedVersion;
+    if (!vJson.inheritsFrom) vJson.inheritsFrom = mcVer;
+
+    if (!fs.existsSync(targetDir)) {
+      fs.mkdirSync(targetDir, { recursive: true });
+    }
+    fs.writeFileSync(targetJson, JSON.stringify(vJson, null, 2), 'utf8');
+
+    // Extract any bundled maven libraries if present
+    try {
+      const zipEntries = zip.getEntries();
+      for (const entry of zipEntries) {
+        if (!entry.isDirectory && entry.entryName.startsWith('maven/')) {
+          const relPath = entry.entryName.substring('maven/'.length);
+          const destPath = path.join(gameDir, 'libraries', relPath);
+          const destDir = path.dirname(destPath);
+          if (!fs.existsSync(destDir)) fs.mkdirSync(destDir, { recursive: true });
+          fs.writeFileSync(destPath, entry.getData());
+        }
+      }
+    } catch (zipErr) {
+      console.warn('Could not extract bundled neoforge libraries:', zipErr.message);
+    }
+
+    const installersDir = path.join(gameDir, 'installers');
+    if (!fs.existsSync(installersDir)) fs.mkdirSync(installersDir, { recursive: true });
+    fs.writeFileSync(path.join(installersDir, `neoforge-${neoVer}-installer.jar`), installerBuffer);
+
+    sanitizeVersionJson(gameDir, selectedVersion);
+    if (sendStatus) sendStatus(`NeoForge ${neoVer} profile configured successfully!`, 'success');
+    return true;
+  } catch (err) {
+    console.error(`Failed to auto-setup NeoForge for ${selectedVersion}:`, err);
+    if (sendStatus) sendStatus(`Notice: Could not auto-download NeoForge profile (${err.message}). Safe launch mode active.`, 'warn');
     return false;
   }
 }
@@ -921,11 +1075,12 @@ async function getAllVersions(gameDir) {
     console.log('Using fallback Fabric versions list:', err.message);
   }
 
-  // 3. Forge & OptiFine Catalogs
+  // 3. Forge, NeoForge & OptiFine Catalogs
   const forge = [...POPULAR_FORGE_RELEASES];
+  const neoforge = [...POPULAR_NEOFORGE_RELEASES];
   const optifine = [...POPULAR_OPTIFINE_RELEASES];
 
-  return { installed, mojang, snapshots, fabric, fabricSnapshots, forge, optifine };
+  return { installed, mojang, snapshots, fabric, fabricSnapshots, forge, neoforge, optifine };
 }
 
 function syncFpsBoosterMod(gameDir) {
@@ -2321,29 +2476,25 @@ ipcMain.handle('game:launch', async (event, launchConfig) => {
     // 1. Sanitize any existing version json (remove duplicate ASM, fix native paths)
     sanitizeVersionJson(gameDir, selectedVersion);
 
-    // 2. If Fabric selected and not yet installed locally, auto-generate Fabric profile
-    if (selectedVersion.toLowerCase().includes('fabric')) {
+    // 2. Profile preparation (Fabric, NeoForge, Forge)
+    const lowerVer = selectedVersion.toLowerCase();
+    if (lowerVer.includes('fabric')) {
       const hasLocalJson = fs.existsSync(path.join(gameDir, 'versions', selectedVersion, `${selectedVersion}.json`));
       if (!hasLocalJson) {
         sendStatus(`Fetching Fabric loader profile for ${selectedVersion}...`, 'info');
-        const installedOk = await ensureFabricProfile(gameDir, selectedVersion);
-        if (!installedOk) {
-          sendStatus(`Warning: Could not fetch online Fabric profile for ${selectedVersion}`, 'warn');
-        }
+        await ensureFabricProfile(gameDir, selectedVersion);
       }
-    }
-
-    // 3. For OptiFine or Forge, check if locally installed
-    if (selectedVersion.toLowerCase().includes('optifine') || selectedVersion.toLowerCase().includes('forge')) {
-      const hasProfile = fs.existsSync(path.join(gameDir, 'versions', selectedVersion, `${selectedVersion}.json`));
-      if (!hasProfile) {
-        const modType = selectedVersion.toLowerCase().includes('optifine') ? 'OptiFine' : 'Forge';
-        const errMsg = `${selectedVersion} is not installed locally. Run the official ${modType} installer once or place the profile in game/versions.`;
-        sendStatus(errMsg, 'error');
-        return {
-          success: false,
-          error: errMsg
-        };
+    } else if (lowerVer.includes('neoforge')) {
+      const hasLocalJson = fs.existsSync(path.join(gameDir, 'versions', selectedVersion, `${selectedVersion}.json`));
+      if (!hasLocalJson) {
+        sendStatus(`Setting up NeoForge profile for ${selectedVersion}...`, 'info');
+        await ensureNeoForgeProfile(gameDir, selectedVersion, sendStatus);
+      }
+    } else if (lowerVer.includes('forge')) {
+      const hasLocalJson = fs.existsSync(path.join(gameDir, 'versions', selectedVersion, `${selectedVersion}.json`));
+      if (!hasLocalJson) {
+        sendStatus(`Setting up Forge profile for ${selectedVersion}...`, 'info');
+        await ensureForgeProfile(gameDir, selectedVersion, sendStatus);
       }
     }
 
@@ -2351,40 +2502,30 @@ ipcMain.handle('game:launch', async (event, launchConfig) => {
 
     const launcher = new Client();
 
-    // Determine version descriptor
+    // Determine version descriptor safely without hard crash
+    const hasCustomJson = fs.existsSync(path.join(gameDir, 'versions', selectedVersion, `${selectedVersion}.json`));
+    const match = selectedVersion.match(/(\d+\.\d+(\.\d+)?)/);
+    const mcNum = match ? match[1] : '1.21.4';
+
     let versionObj = {
-      number: '1.21.4',
+      number: mcNum,
       type: 'release'
     };
 
-    if (selectedVersion.toLowerCase().includes('fabric')) {
-      const match = selectedVersion.match(/(\d+\.\d+(\.\d+)?)/);
+    if (hasCustomJson) {
+      versionObj.custom = selectedVersion;
+    } else if (lowerVer.includes('fabric') || lowerVer.includes('neoforge') || lowerVer.includes('forge') || lowerVer.includes('optifine')) {
+      sendStatus(`Note: Loader profile for ${selectedVersion} was not found; safely launching vanilla Minecraft ${mcNum}.`, 'warn');
       versionObj = {
-        number: match ? match[1] : '1.21.4',
-        type: 'release',
-        custom: selectedVersion
-      };
-    } else if (selectedVersion.toLowerCase().includes('optifine')) {
-      const match = selectedVersion.match(/(\d+\.\d+(\.\d+)?)/);
-      versionObj = {
-        number: match ? match[1] : '1.21.4',
-        type: 'release',
-        custom: selectedVersion
-      };
-    } else if (selectedVersion.toLowerCase().includes('forge')) {
-      const match = selectedVersion.match(/(\d+\.\d+(\.\d+)?)/);
-      versionObj = {
-        number: match ? match[1] : '1.21.4',
-        type: 'release',
-        custom: selectedVersion
+        number: mcNum,
+        type: 'release'
       };
     } else {
-      const isCustomLocal = fs.existsSync(path.join(gameDir, 'versions', selectedVersion, `${selectedVersion}.json`));
       versionObj = {
         number: selectedVersion,
         type: 'release'
       };
-      if (isCustomLocal && isNaN(Number(selectedVersion[0]))) {
+      if (hasCustomJson && isNaN(Number(selectedVersion[0]))) {
         versionObj.custom = selectedVersion;
       }
     }

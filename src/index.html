@@ -143,7 +143,7 @@
             </span>
             <div class="nav-labels">
               <span class="nav-primary">Servers</span>
-              <span class="nav-secondary">Ping & Direct Join</span>
+              <span class="nav-secondary">Radmin VPN / LAN</span>
             </div>
           </button>
 
@@ -425,6 +425,7 @@
                     <div class="dropdown-category-pills">
                       <button type="button" class="cat-filter-btn active" data-filter="all">All</button>
                       <button type="button" class="cat-filter-btn" data-filter="vanilla">Vanilla</button>
+                      <button type="button" class="cat-filter-btn" data-filter="neoforge">NeoForge</button>
                       <button type="button" class="cat-filter-btn" data-filter="forge">Forge</button>
                       <button type="button" class="cat-filter-btn" data-filter="optifine">OptiFine</button>
                       <button type="button" class="cat-filter-btn" data-filter="fabric">Fabric</button>
@@ -1043,6 +1044,30 @@
             </div>
             <div class="add-server-footer">
               <button type="button" class="btn-accent-apply" id="btn-save-new-server">Save &amp; Ping Server</button>
+            </div>
+          </div>
+
+          <!-- Radmin VPN & LAN Quick Connect Card -->
+          <div class="radmin-vpn-banner">
+            <div class="radmin-banner-left">
+              <div class="radmin-badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg>
+                <span>RADMIN VPN / LAN QUICK CONNECT</span>
+              </div>
+              <h3 class="radmin-banner-title">Быстрое подключение к другу по Radmin VPN</h3>
+              <p class="radmin-banner-desc">
+                Войдите в одну сеть Radmin VPN с другом. Скопируйте IP друга (начинается на <strong>26.x.x.x</strong>), узнайте порт из игры друга (после того, как он нажмет "Открыть для сети"), введите адрес ниже и нажмите <strong>Подключиться</strong> для мгновенного входа!
+              </p>
+              <div class="radmin-quick-bar">
+                <div class="radmin-input-wrap">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                  <input type="text" id="radmin-quick-input" class="radmin-quick-input" placeholder="26.x.x.x:ПОРТ (например 26.154.21.90:54321)" autocomplete="off" spellcheck="false">
+                </div>
+                <button type="button" class="btn-radmin-join" id="btn-radmin-quick-join">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                  <span>Подключиться</span>
+                </button>
+              </div>
             </div>
           </div>
 
