@@ -3068,15 +3068,15 @@ async function updateClientVersionDisplay() {
   try {
     const ver = (window.electronAPI && window.electronAPI.getAppVersion)
       ? await window.electronAPI.getAppVersion()
-      : '1.0.3';
+      : '1.0.5';
     if (ver) {
       if (currentVersionBadge) currentVersionBadge.textContent = `v${ver}`;
       if (sidebarClientVersion) sidebarClientVersion.textContent = `Orbit ${ver}`;
       if (updateChipCurrent) updateChipCurrent.textContent = `Current: v${ver}`;
     }
   } catch (e) {
-    if (currentVersionBadge) currentVersionBadge.textContent = 'v1.0.3';
-    if (sidebarClientVersion) sidebarClientVersion.textContent = 'Orbit 1.0.3';
+    if (currentVersionBadge) currentVersionBadge.textContent = 'v1.0.5';
+    if (sidebarClientVersion) sidebarClientVersion.textContent = 'Orbit 1.0.5';
   }
 }
 
