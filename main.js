@@ -2716,8 +2716,12 @@ function compareSemver(v1, v2) {
   return 0;
 }
 
+ipcMain.handle('app:getVersion', () => {
+  return app.getVersion() || '1.0.2';
+});
+
 ipcMain.handle('updater:check', async () => {
-  const currentVersion = app.getVersion() || '1.0.0';
+  const currentVersion = app.getVersion() || '1.0.2';
   try {
     const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`, {
       headers: {

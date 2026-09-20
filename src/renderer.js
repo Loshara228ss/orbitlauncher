@@ -3061,6 +3061,24 @@ const btnCheckUpdatesText = document.getElementById('btn-check-updates-text');
 const btnUpdateNowDirect = document.getElementById('btn-update-now-direct');
 const btnUpdateNowText = document.getElementById('btn-update-now-text');
 const updateManualStatus = document.getElementById('update-manual-status');
+const currentVersionBadge = document.getElementById('current-version-badge');
+const sidebarClientVersion = document.getElementById('sidebar-client-version');
+
+async function updateClientVersionDisplay() {
+  try {
+    const ver = (window.electronAPI && window.electronAPI.getAppVersion)
+      ? await window.electronAPI.getAppVersion()
+      : '1.0.2';
+    if (ver) {
+      if (currentVersionBadge) currentVersionBadge.textContent = `v${ver}`;
+      if (sidebarClientVersion) sidebarClientVersion.textContent = `Orbit ${ver}`;
+      if (updateChipCurrent) updateChipCurrent.textContent = `Current: v${ver}`;
+    }
+  } catch (e) {
+    if (currentVersionBadge) currentVersionBadge.textContent = 'v1.0.2';
+    if (sidebarClientVersion) sidebarClientVersion.textContent = 'Orbit 1.0.2';
+  }
+}
 
 let latestUpdateData = null;
 let isUpdating = false;
@@ -3114,6 +3132,11 @@ async function checkClientUpdates(isManual = false) {
 
   try {
     const res = await window.electronAPI.checkForUpdates();
+    if (res.currentVersion) {
+      if (currentVersionBadge) currentVersionBadge.textContent = `v${res.currentVersion}`;
+      if (sidebarClientVersion) sidebarClientVersion.textContent = `Orbit ${res.currentVersion}`;
+      if (updateChipCurrent) updateChipCurrent.textContent = `Current: v${res.currentVersion}`;
+    }
     if (res.updateAvailable) {
       latestUpdateData = res;
       if (updateManualStatus) {
@@ -3195,6 +3218,7 @@ window.electronAPI.onUpdateProgress((prog) => {
 
 document.addEventListener('DOMContentLoaded', () => {
   initConfig();
+  updateClientVersionDisplay();
   setTimeout(() => {
     checkClientUpdates(false);
   }, 3000);

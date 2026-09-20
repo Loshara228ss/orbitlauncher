@@ -82,6 +82,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
 
   // Auto-Updater (GitHub Releases)
+  getAppVersion: () => ipcRenderer.invoke('app:getVersion'),
   checkForUpdates: () => ipcRenderer.invoke('updater:check'),
   downloadUpdate: (downloadUrl) => ipcRenderer.invoke('updater:download', downloadUrl),
   installUpdate: (filePath) => ipcRenderer.invoke('updater:install', filePath),
