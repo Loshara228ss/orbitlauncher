@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const net = require('net');
 const crypto = require('crypto');
+const { spawn, execSync, spawnSync } = require('child_process');
 const AdmZip = require('adm-zip');
 const { Client } = require('minecraft-launcher-core');
 
@@ -358,7 +359,7 @@ async function downloadWithProgressAndFallback(urls, label, sendStatus) {
 
       const res = await fetch(url, {
         signal: controller.signal,
-        headers: { 'User-Agent': 'OrbitLauncher/1.0.5' }
+        headers: { 'User-Agent': 'OrbitLauncher/1.0.6' }
       });
       clearTimeout(timeoutId);
 
@@ -2952,11 +2953,11 @@ function compareSemver(v1, v2) {
 }
 
 ipcMain.handle('app:getVersion', () => {
-  return app.getVersion() || '1.0.5';
+  return app.getVersion() || '1.0.6';
 });
 
 ipcMain.handle('updater:check', async () => {
-  const currentVersion = app.getVersion() || '1.0.5';
+  const currentVersion = app.getVersion() || '1.0.6';
   try {
     const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`, {
       headers: {
