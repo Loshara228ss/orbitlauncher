@@ -1,0 +1,9 @@
+{
+  "username": "Player",
+  "selectedVersion": "Fabric 1.21.4",
+  "ramGb": 4,
+  "gameDir": "C:\\Users\\Atuka\\AppData\\Roaming\\.tlauncher\\legacy\\Minecraft\\game",
+  "javaPath": "C:\\Users\\Atuka\\AppData\\Roaming\\.tlauncher\\legacy\\Minecraft\\jre\\java-runtime-delta\\windows-x64\\java-runtime-delta\\bin\\javaw.exe",
+  "autoCloseOnLaunch": false,
+  "gpuOptimized": true
+}

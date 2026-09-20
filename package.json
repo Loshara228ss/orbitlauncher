@@ -1,0 +1,30 @@
+{
+  "name": "orbit-mc-launcher",
+  "version": "1.0.0",
+  "description": "Next-Gen Minecraft Launcher with Built-in FPS Booster",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-packager . OrbitLauncher --platform=win32 --arch=x64 --icon=icon.ico --out=../dist --overwrite --prune=true",
+    "dist:installer": "node build-installer.js"
+  },
+  "keywords": [
+    "minecraft",
+    "launcher",
+    "electron",
+    "fpsbooster"
+  ],
+  "author": "Atuka",
+  "license": "MIT",
+  "dependencies": {
+    "adm-zip": "^0.5.16",
+    "minecraft-launcher-core": "^3.13.0",
+    "skinview3d": "^3.4.2",
+    "three": "^0.186.0"
+  },
+  "devDependencies": {
+    "@electron/packager": "^20.3.0",
+    "electron": "^34.2.0",
+    "eslint": "^8.57.1"
+  }
+}

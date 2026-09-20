@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ORBIT Launcher — Minecraft Client</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <script src="skinview3d.bundle.js"></script>
+</head>
+<body>
+  <div class="orbit-shell">
+    
+    <!-- Top Bar -->
+    <header class="orbit-topbar">
+      <div class="topbar-drag-area">
+        <div class="brand-cluster">
+          <div class="brand-gem">
+            <img src="icon.png" alt="Orbit" class="brand-icon-img">
+          </div>
+          <div class="brand-titles">
+            <span class="brand-main">ORBIT</span>
+            <span class="brand-sub">LAUNCHER</span>
+          </div>
+          <span class="brand-pill">RED EDITION</span>
+        </div>
+      </div>
+
+      <!-- Account Switcher Dropdown (No-drag area) -->
+      <div class="account-switcher-wrap" id="account-switcher-wrap">
+        <button type="button" class="account-pill-btn" id="btn-account-switcher" title="Active player account">
+          <img id="topbar-avatar" src="https://mc-heads.net/avatar/Player/24" alt="Head" class="topbar-avatar-img">
+          <span class="account-pill-name" id="topbar-username">Player</span>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <div class="account-menu-popover" id="account-menu-popover" style="display: none;">
+          <div class="account-menu-title">ACCOUNTS</div>
+          <div class="account-menu-list" id="account-menu-list"></div>
+          <div class="account-add-box">
+            <input type="text" id="input-new-account" class="account-add-input" placeholder="New account name..." maxlength="16">
+            <button type="button" id="btn-add-account" class="btn-account-add-submit" title="Add Profile">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="window-actions">
+        <button class="win-control-btn" id="btn-minimize" title="Minimize">
+          <svg width="12" height="2" viewBox="0 0 12 2"><rect width="12" height="2" fill="currentColor"/></svg>
+        </button>
+        <button class="win-control-btn" id="btn-maximize" title="Maximize">
+          <svg width="11" height="11" viewBox="0 0 11 11"><rect x="0.75" y="0.75" width="9.5" height="9.5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+        </button>
+        <button class="win-control-btn btn-close-win" id="btn-close" title="Close">
+          <svg width="11" height="11" viewBox="0 0 11 11"><path d="M1 1L10 10M10 1L1 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- App Body -->
+    <div class="orbit-body">
+
+      <!-- Left Sidebar -->
+      <aside class="orbit-sidebar">
+        
+        <!-- Player Profile Card -->
+        <div class="player-card" id="sidebar-player-card" title="Click to open Profile & Skins">
+          <div class="avatar-capsule">
+            <img id="player-avatar" src="https://mc-heads.net/avatar/Player/64" alt="Skin" class="avatar-head">
+            <span class="player-online-beacon" title="Online & Ready"></span>
+          </div>
+          <div class="player-meta">
+            <div class="player-input-wrap">
+              <input type="text" id="username-input" class="player-name-input" value="Player" spellcheck="false" autocomplete="off" placeholder="Your username">
+            </div>
+            <div class="player-badge-line">
+              <span class="tier-chip">PLAYER</span>
+              <span class="ping-chip">READY</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Navigation Menu (Pure SVGs) -->
+        <nav class="sidebar-nav">
+          <button class="nav-button active" data-tab="tab-play">
+            <div class="nav-active-bar"></div>
+            <span class="nav-glyph">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="5 3 19 17 17 19 3 5 5 3"></polygon>
+                <path d="m14.5 9.5 5 5"></path>
+                <path d="m3 21 3-3"></path>
+                <path d="m9.5 14.5 5 5"></path>
+              </svg>
+            </span>
+            <div class="nav-labels">
+              <span class="nav-primary">Play</span>
+              <span class="nav-secondary">Version & Launch</span>
+            </div>
+          </button>
+
+          <button class="nav-button" data-tab="tab-profile">
+            <div class="nav-active-bar"></div>
+            <span class="nav-glyph">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </span>
+            <div class="nav-labels">
+              <span class="nav-primary">Profile</span>
+              <span class="nav-secondary">3D Skin & Character</span>
+            </div>
+          </button>
+
+          <button class="nav-button" data-tab="tab-mods">
+            <div class="nav-active-bar"></div>
+            <span class="nav-glyph">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+              </svg>
+            </span>
+            <div class="nav-labels">
+              <span class="nav-primary">Mods</span>
+              <span class="nav-secondary">Catalog & Install</span>
+            </div>
+            <span class="nav-status-badge" id="sidebar-mods-count">0</span>
+          </button>
+
+          <button class="nav-button" data-tab="tab-servers">
+            <div class="nav-active-bar"></div>
+            <span class="nav-glyph">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                <line x1="6" y1="18" x2="6.01" y2="18"></line>
+              </svg>
+            </span>
+            <div class="nav-labels">
+              <span class="nav-primary">Servers</span>
+              <span class="nav-secondary">Ping & Direct Join</span>
+            </div>
+          </button>
+
+          <button class="nav-button" data-tab="tab-screenshots">
+            <div class="nav-active-bar"></div>
+            <span class="nav-glyph">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                <polyline points="21 15 16 10 5 21"></polyline>
+              </svg>
+            </span>
+            <div class="nav-labels">
+              <span class="nav-primary">Gallery</span>
+              <span class="nav-secondary">Screenshots & Snaps</span>
+            </div>
+          </button>
+
+          <button class="nav-button" data-tab="tab-settings">
+            <div class="nav-active-bar"></div>
+            <span class="nav-glyph">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              </svg>
+            </span>
+            <div class="nav-labels">
+              <span class="nav-primary">Settings</span>
+              <span class="nav-secondary">RAM & Java Paths</span>
+            </div>
+          </button>
+        </nav>
+
+        <!-- Quick Access Folders -->
+        <div class="sidebar-folders">
+          <span class="folder-group-title">DIRECTORIES</span>
+          <div class="folder-buttons-row">
+            <button class="btn-folder" id="btn-open-mods" title="Open mods folder">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+              </svg>
+              <span>MODS</span>
+            </button>
+            <button class="btn-folder" id="btn-open-game" title="Open .minecraft directory">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <span>GAME</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Client Status Footer -->
+        <div class="sidebar-spec-footer">
+          <div class="spec-line">
+            <span class="spec-label">CLIENT</span>
+            <span class="spec-val text-red">Orbit 1.0</span>
+          </div>
+          <div class="spec-line">
+            <span class="spec-label">ENGINE</span>
+            <span class="spec-val text-high">Fabric / Mojang</span>
+          </div>
+          <div class="spec-line">
+            <span class="spec-label">STATUS</span>
+            <span class="spec-val text-red">Ready to play</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Stage -->
+      <main class="orbit-stage">
+
+        <!-- TAB 1: PLAY & LAUNCH HUB -->
+        <section id="tab-play" class="stage-pane active">
+          
+          <!-- Hero Game Showcase Banner -->
+          <div class="hero-showcase">
+            <div class="hero-ambient-glow"></div>
+            
+            <div class="hero-main-info">
+              <div class="hero-tag-cluster">
+                <span class="hero-tag tag-crimson">
+                  <span class="tag-spark"></span>
+                  FABRIC READY
+                </span>
+                <span class="hero-tag tag-dark">ALL MOJANG RELEASES</span>
+                <span class="hero-tag tag-dark">JAVA 21 RUNTIME</span>
+              </div>
+
+              <h1 class="hero-brand-heading">MINECRAFT</h1>
+              
+              <div class="hero-active-version-bar">
+                <span class="version-symbol">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                  </svg>
+                </span>
+                <span id="display-version-title">FABRIC 1.21.4</span>
+              </div>
+
+              <p class="hero-description">High-performance Minecraft client with Fabric loader support, automatic downloads of all official Mojang releases, and fine-tuned memory control.</p>
+
+              <!-- Telemetry Stat Badges (Pure SVGs) -->
+              <div class="hero-telemetry-row">
+                <div class="stat-badge">
+                  <span class="stat-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                    </svg>
+                  </span>
+                  <div class="stat-texts">
+                    <span class="stat-title">ENGINE</span>
+                    <span class="stat-value text-red" id="hud-engine-val">Fabric 1.21.4</span>
+                  </div>
+                </div>
+
+                <div class="stat-badge">
+                  <span class="stat-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+                      <rect x="9" y="9" width="6" height="6"></rect>
+                      <line x1="9" y1="1" x2="9" y2="4"></line>
+                      <line x1="15" y1="1" x2="15" y2="4"></line>
+                      <line x1="9" y1="20" x2="9" y2="23"></line>
+                      <line x1="15" y1="20" x2="15" y2="23"></line>
+                      <line x1="20" y1="9" x2="23" y2="9"></line>
+                      <line x1="20" y1="14" x2="23" y2="14"></line>
+                      <line x1="1" y1="9" x2="4" y2="9"></line>
+                      <line x1="1" y1="14" x2="4" y2="14"></line>
+                    </svg>
+                  </span>
+                  <div class="stat-texts">
+                    <span class="stat-title">ALLOCATED RAM</span>
+                    <span class="stat-value text-high" id="hud-ram-val">4.0 GB</span>
+                  </div>
+                </div>
+
+                <div class="stat-badge">
+                  <span class="stat-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
+                      <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
+                      <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+                      <line x1="12" y1="20" x2="12.01" y2="20"></line>
+                    </svg>
+                  </span>
+                  <div class="stat-texts">
+                    <span class="stat-title">NETWORK</span>
+                    <span class="stat-value text-red">Online</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Profile Jump Card -->
+            <div class="hero-profile-card" id="hero-profile-card" title="Click to open Profile & 3D Skin Studio">
+              <div class="hero-avatar-wrap">
+                <img id="hero-avatar-img" src="https://mc-heads.net/avatar/Player/64" alt="Skin" class="hero-avatar-head">
+                <span class="hero-avatar-dot" title="Online"></span>
+              </div>
+              <div class="hero-profile-info">
+                <span class="hero-profile-sub">CHARACTER</span>
+                <span class="hero-profile-name" id="hero-profile-name">Player</span>
+                <span class="hero-profile-link">
+                  <span>3D Profile</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feature Cards Row (Pure SVGs) -->
+          <div class="quick-features-row">
+            <div class="feature-tile">
+              <div class="tile-icon-box bg-red-dim">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="5 3 19 17 17 19 3 5 5 3"></polygon>
+                  <path d="m14.5 9.5 5 5"></path>
+                  <path d="m3 21 3-3"></path>
+                  <path d="m9.5 14.5 5 5"></path>
+                </svg>
+              </div>
+              <div class="tile-content">
+                <h4>Singleplayer & Servers</h4>
+                <p>Full support for local worlds, saves, and online multiplayer servers.</p>
+              </div>
+              <span class="tile-tag-red">READY</span>
+            </div>
+
+            <div class="feature-tile">
+              <div class="tile-icon-box bg-dark-dim">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+              </div>
+              <div class="tile-content">
+                <h4>All Version Catalog</h4>
+                <p>Launch 1.21.4, 1.20.4, 1.16.5, 1.12.2, 1.8.9 and any official release.</p>
+              </div>
+              <span class="tile-tag-gray">MOJANG</span>
+            </div>
+
+            <div class="feature-tile">
+              <div class="tile-icon-box bg-red-dim">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                  <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                  <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                </svg>
+              </div>
+              <div class="tile-content">
+                <h4>Mods Directory</h4>
+                <p>Quick installation and drag-and-drop mods management.</p>
+              </div>
+              <span class="tile-tag-red" id="tile-mods-status">ACTIVE</span>
+            </div>
+          </div>
+
+          <!-- Progress Bar & Status Strip -->
+          <div class="xp-status-strip">
+            <div class="xp-track-wrapper">
+              <div class="xp-progress-bar">
+                <div class="xp-fill-indicator" id="progress-bar-fill"></div>
+              </div>
+              <div class="xp-lvl-counter" id="xp-level-badge">1.21.4</div>
+            </div>
+
+            <div class="status-summary-bar">
+              <div class="status-left">
+                <span class="status-lead">&gt;</span>
+                <span id="console-status-text">Client core ready to launch</span>
+              </div>
+              <button class="btn-toggle-console" id="btn-toggle-console" title="Toggle launch logs">
+                <span>LAUNCH LOGS</span>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </button>
+            </div>
+
+            <!-- Expandable Console Output -->
+            <div class="collapsible-console" id="collapsible-console" style="display: none;">
+              <div class="console-text-flow" id="console-logs">
+                <div class="log-entry log-sys">[ORBIT] Client initialized. Select a version and click PLAY.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Command Deck -->
+          <div class="launch-master-deck">
+            
+            <!-- Version Select Capsule (Custom Animated Dropdown) -->
+            <div class="deck-unit version-unit">
+              <label class="unit-label">MINECRAFT VERSION</label>
+              <div class="custom-dropdown-container" id="custom-version-dropdown">
+                <!-- Trigger Button -->
+                <button type="button" class="custom-dropdown-trigger" id="version-dropdown-trigger" aria-haspopup="listbox" aria-expanded="false">
+                  <div class="trigger-selected-info">
+                    <span class="trigger-badge-cat cat-badge-fabric" id="trigger-badge-cat">FABRIC</span>
+                    <span class="trigger-version-name" id="trigger-version-name">Fabric 1.21.4</span>
+                    <span class="trigger-status-chip" id="trigger-status-chip">READY</span>
+                  </div>
+                  <span class="trigger-chevron">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                  </span>
+                </button>
+
+                <!-- Hidden input for standard value storage -->
+                <input type="hidden" id="version-select" value="Fabric 1.21.4">
+
+                <!-- Animated Pop-up Menu -->
+                <div class="custom-dropdown-menu" id="version-dropdown-menu">
+                  <!-- Header: Search & Category Filter Pills -->
+                  <div class="dropdown-header-bar">
+                    <div class="dropdown-search-wrap">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                      <input type="text" id="version-search-input" class="dropdown-search-input" placeholder="Search version (e.g. 1.21, OptiFine)..." autocomplete="off" spellcheck="false">
+                    </div>
+                    <div class="dropdown-category-pills">
+                      <button type="button" class="cat-filter-btn active" data-filter="all">All</button>
+                      <button type="button" class="cat-filter-btn" data-filter="vanilla">Vanilla</button>
+                      <button type="button" class="cat-filter-btn" data-filter="forge">Forge</button>
+                      <button type="button" class="cat-filter-btn" data-filter="optifine">OptiFine</button>
+                      <button type="button" class="cat-filter-btn" data-filter="fabric">Fabric</button>
+                      <button type="button" class="cat-filter-btn cat-snapshots-btn" id="btn-toggle-snapshots" data-filter="snapshots" title="Toggle 700+ Snapshots">Snapshots</button>
+                    </div>
+                  </div>
+
+                  <!-- Scrollable Version Options Grouped by Category -->
+                  <div class="dropdown-scroll-list" id="version-options-list">
+                    <!-- Populated dynamically via JS -->
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- RAM Presets Segmented Bar -->
+            <div class="deck-unit ram-unit">
+              <label class="unit-label">RAM ALLOCATION</label>
+              <div class="ram-segmented-control">
+                <button class="ram-segment-btn" data-ram="2">2 GB</button>
+                <button class="ram-segment-btn active" data-ram="4">4 GB</button>
+                <button class="ram-segment-btn" data-ram="6">6 GB</button>
+                <button class="ram-segment-btn" data-ram="8">8 GB</button>
+                <button class="ram-segment-btn" data-ram="12">12 GB</button>
+              </div>
+            </div>
+
+            <!-- Grand Crimson Launch Button -->
+            <button id="btn-launch" class="btn-grand-launch">
+              <div class="launch-ambient-sheen"></div>
+              <div class="launch-btn-inner">
+                <span class="launch-play-symbol">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+                </span>
+                <span class="launch-main-text" id="btn-launch-text">PLAY</span>
+              </div>
+            </button>
+
+          </div>
+
+        </section>
+
+        <!-- TAB: PROFILE & 3D SKIN STUDIO (TOP 3D STAGE, BOTTOM DECK) -->
+        <section id="tab-profile" class="stage-pane">
+          <div class="pane-headline">
+            <div>
+              <h2 class="headline-title">PROFILE & 3D SKIN STUDIO</h2>
+              <p class="headline-sub">Real-time 3D character viewport, custom PNG skin uploader, and Mojang skin synchronization</p>
+            </div>
+            <div class="headline-actions">
+              <button id="btn-refresh-skin" class="btn-secondary-action" title="Reload current skin texture">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                </svg>
+                <span>Reload Skin</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 1. TOP: HERO 3D SKIN STAGE -->
+          <div class="profile-hero-stage-card">
+            <div class="stage-ambient-glow"></div>
+            
+            <div class="stage-header-row">
+              <div class="stage-title-group">
+                <span class="stage-badge-red">
+                  <span class="badge-pulse-dot"></span>
+                  3D CHARACTER VIEWPORT
+                </span>
+                <span class="stage-model-info" id="skin-model-badge">MODEL: CLASSIC (4PX)</span>
+              </div>
+              <div class="stage-controls-hint">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+                <span>Drag LMB to rotate • Scroll to zoom</span>
+              </div>
+            </div>
+
+            <!-- Centered 3D Viewport with Crimson Pedestal & Shadow -->
+            <div class="stage-viewport-center">
+              <div class="pedestal-halo-red"></div>
+              <div class="pedestal-disc-red"></div>
+              <canvas id="skin-canvas" class="skin-canvas-3d-stage"></canvas>
+              <div class="character-shadow-stage"></div>
+            </div>
+
+            <!-- Stage Toolstrip: Animations & Tools -->
+            <div class="stage-toolstrip">
+              <div class="toolstrip-anims">
+                <span class="toolstrip-label">ANIMATION:</span>
+                <div class="anim-segmented-pills">
+                  <button class="anim-pill-btn active" data-anim="idle">Idle</button>
+                  <button class="anim-pill-btn" data-anim="walk">Walk</button>
+                  <button class="anim-pill-btn" data-anim="run">Run</button>
+                  <button class="anim-pill-btn" data-anim="fly">Fly</button>
+                </div>
+              </div>
+
+              <div class="toolstrip-actions">
+                <button id="btn-toggle-rotate" class="btn-viewer-tool active" title="Toggle automatic rotation">
+                  <span id="rotate-icon">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+                  </span>
+                  <span id="rotate-text">Auto-Rotate: ON</span>
+                </button>
+                <button id="btn-reset-pose" class="btn-viewer-tool" title="Reset camera view to center">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg>
+                  <span>Reset Camera</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. BOTTOM: SETTINGS & UPLOAD DECK (UNDERNEATH THE SKIN) -->
+          <div class="profile-bottom-deck">
+            
+            <!-- BOTTOM LEFT: CUSTOM SKIN UPLOADER -->
+            <div class="settings-card upload-custom-card">
+              <div class="settings-card-header">
+                <div>
+                  <h3 class="settings-card-title">Custom Skin File (.PNG)</h3>
+                  <p class="settings-card-sub">Upload your own skin or drag & drop directly into the launcher</p>
+                </div>
+                <span class="tile-tag-red">CUSTOM SKIN</span>
+              </div>
+
+              <!-- Drag & Drop Dropzone -->
+              <div class="skin-dropzone" id="skin-dropzone" title="Click or drop a Minecraft skin .png file">
+                <input type="file" id="skin-file-input" accept="image/png" style="display: none;">
+                <div class="dropzone-icon">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                  </svg>
+                </div>
+                <div class="dropzone-text">
+                  <span class="dropzone-title">Drop your skin (.png) here or <span class="dropzone-browse">browse files</span></span>
+                  <span class="dropzone-hint">Supports standard 64x64 &amp; classic 64x32 textures</span>
+                </div>
+              </div>
+
+              <!-- Arm Model Selector (Classic vs Slim) & Reset Bar -->
+              <div class="skin-upload-options">
+                <div class="option-field">
+                  <label class="unit-label">ARM MODEL TYPE</label>
+                  <div class="arm-model-toggles">
+                    <button class="model-toggle-btn active" data-model="default">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="3" width="14" height="18" rx="2"/></svg>
+                      <span>Classic (4px Arms)</span>
+                    </button>
+                    <button class="model-toggle-btn" data-model="slim">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="3" width="10" height="18" rx="2"/></svg>
+                      <span>Slim Alex (3px Arms)</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="skin-active-info-bar">
+                  <div class="skin-status-meta">
+                    <span class="status-indicator-dot" id="skin-source-dot"></span>
+                    <span id="skin-source-text">Source: Mojang Online Sync</span>
+                  </div>
+                  <button id="btn-reset-skin-file" class="btn-tiny-action" title="Revert to player nickname skin">
+                    Revert to Online
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- BOTTOM RIGHT: IDENTITY & QUICK PRESETS -->
+            <div class="settings-card identity-presets-card">
+              <div class="settings-card-header">
+                <div>
+                  <h3 class="settings-card-title">In-Game Identity & Presets</h3>
+                  <p class="settings-card-sub">Multiplayer nickname and popular character skins</p>
+                </div>
+                <span class="tile-tag-gray">MOJANG SYNC</span>
+              </div>
+
+              <div class="profile-name-edit-row">
+                <div class="profile-big-avatar-box">
+                  <img id="profile-big-avatar" src="https://mc-heads.net/avatar/Player/64" alt="Avatar">
+                </div>
+                <div class="profile-name-fields">
+                  <label for="profile-username-input" class="unit-label">PLAYER NICKNAME</label>
+                  <div class="input-with-button">
+                    <input type="text" id="profile-username-input" class="orbit-text-input profile-text-lg" value="Player" spellcheck="false" autocomplete="off" placeholder="Enter nickname">
+                    <button id="btn-apply-profile-name" class="btn-input-accessory btn-accent-apply">APPLY</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Popular Skins Presets -->
+              <div class="skin-presets-section">
+                <span class="presets-section-title">QUICK CHARACTER PRESETS (CLICK TO LOAD):</span>
+                <div class="skin-presets-grid">
+                  <button class="preset-chip" data-nick="Player">
+                    <img src="https://mc-heads.net/avatar/Player/24" alt="Player">
+                    <span>Player</span>
+                  </button>
+                  <button class="preset-chip" data-nick="Steve">
+                    <img src="https://mc-heads.net/avatar/Steve/24" alt="Steve">
+                    <span>Steve</span>
+                  </button>
+                  <button class="preset-chip" data-nick="Alex">
+                    <img src="https://mc-heads.net/avatar/Alex/24" alt="Alex">
+                    <span>Alex</span>
+                  </button>
+                  <button class="preset-chip" data-nick="Notch">
+                    <img src="https://mc-heads.net/avatar/Notch/24" alt="Notch">
+                    <span>Notch</span>
+                  </button>
+                  <button class="preset-chip" data-nick="Dream">
+                    <img src="https://mc-heads.net/avatar/Dream/24" alt="Dream">
+                    <span>Dream</span>
+                  </button>
+                  <button class="preset-chip" data-nick="Technoblade">
+                    <img src="https://mc-heads.net/avatar/Technoblade/24" alt="Technoblade">
+                    <span>Technoblade</span>
+                  </button>
+                </div>
+              </div>
+
+            <!-- CAPES & CLOAKS STUDIO CARD -->
+            <div class="settings-card profile-capes-card">
+              <div class="settings-card-header">
+                <div>
+                  <h3 class="settings-card-title">Capes &amp; Cloaks Studio</h3>
+                  <p class="settings-card-sub">Select classic Minecon &amp; Orbit cloaks or upload a custom 64x32 cape (.png)</p>
+                </div>
+                <div class="cape-header-actions">
+                  <input type="file" id="cape-file-input" accept="image/png" style="display: none;">
+                  <button type="button" class="btn-tiny-action" id="btn-upload-cape" title="Upload custom cape PNG">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <span>Upload Cape</span>
+                  </button>
+                  <button type="button" class="btn-tiny-action" id="btn-clear-cape" title="Remove cape">
+                    <span>Remove Cape</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Cape presets grid -->
+              <div class="capes-presets-grid" id="capes-presets-grid">
+                <div class="hub-loading-state" style="padding: 16px;">
+                  <div class="hub-spinner"></div>
+                  <span>Loading capes...</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- TAB 2: MODS & ADDONS (PREMIUM MODRINTH STORE & LOCAL MANAGER) -->
+        <section id="tab-mods" class="stage-pane">
+          <!-- Premium Mod Header -->
+          <div class="mods-stage-header">
+            <div class="mods-title-block">
+              <div class="mods-badge-row">
+                <span class="mods-glow-tag">
+                  <span class="tag-spark"></span>
+                  MODRINTH REPOSITORY
+                </span>
+                <span class="mods-counter-badge" id="modstore-pill-total">150,000+ Available</span>
+              </div>
+              <h2 class="mods-main-title">MODS & ADDONS CENTER</h2>
+              <p class="mods-sub-title">Search, discover, and 1-click install mods directly into your game directory</p>
+            </div>
+
+            <!-- Top Actions & Sub-tabs -->
+            <div class="mods-header-controls">
+              <div class="mods-mode-segmented">
+                <button type="button" class="mode-seg-btn active" id="btn-subtab-modstore" data-subtab="modstore">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                  <span>BROWSE STORE</span>
+                </button>
+                <button type="button" class="mode-seg-btn" id="btn-subtab-installedmods" data-subtab="installedmods">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                  <span>INSTALLED</span>
+                  <span class="mode-badge-count" id="installed-mods-counter">0</span>
+                </button>
+              </div>
+
+              <div class="mods-utility-buttons">
+                <button id="btn-export-modpack" class="btn-mods-action" title="Export installed mods to .orbit package">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  <span>Export Pack</span>
+                </button>
+                <button id="btn-import-modpack" class="btn-mods-action" title="Import .orbit or .zip modpack">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  <span>Import Pack</span>
+                </button>
+                <button id="btn-open-mods-tab" class="btn-mods-action" title="Open .minecraft/mods folder">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                  </svg>
+                  <span>Folder</span>
+                </button>
+                <button id="btn-refresh-mods" class="btn-mods-action" title="Refresh mod store">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                  </svg>
+                  <span>Refresh</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Type Switcher Segment (MODS | SHADERS | RESOURCE PACKS) -->
+          <div class="content-type-selector">
+            <button type="button" class="type-pill-btn active" data-type="mod" id="btn-type-mods">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+              <span>MODS</span>
+            </button>
+            <button type="button" class="type-pill-btn" data-type="shader" id="btn-type-shaders">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+              <span>SHADERS</span>
+            </button>
+            <button type="button" class="type-pill-btn" data-type="resourcepack" id="btn-type-resourcepacks">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+              <span>RESOURCE PACKS</span>
+            </button>
+          </div>
+
+          <!-- SUB-PANE 1: MOD STORE BROWSER -->
+          <div class="hub-subpane active" id="subpane-modstore">
+            
+            <!-- Orbit FPS Booster Exclusive Card -->
+            <div class="orbit-exclusive-banner" id="fpsbooster-exclusive-card">
+              <div class="banner-badge-gem">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              </div>
+              <div class="banner-content">
+                <div class="banner-tag-row">
+                  <span class="tile-tag-red">ORBIT EXCLUSIVE</span>
+                  <span class="banner-status-badge" id="fpsbooster-status-chip">Checking status...</span>
+                </div>
+                <h3 class="banner-title">Orbit FPS Booster v1.0.0 (Official Mod)</h3>
+                <p class="banner-desc">Ultra-optimized client-side Fabric mod: zero-latency chunk render cache, entity cull optimizer, and dynamic particle limiter. Optional and player-controlled.</p>
+              </div>
+              <div class="banner-actions">
+                <button type="button" class="btn-primary-action" id="btn-toggle-fpsbooster">
+                  <span>INSTALL MOD</span>
+                </button>
+              </div>
+            </div>
+            <!-- Modern Search & Filter Suite -->
+            <div class="mods-filter-bar">
+              <div class="mods-search-box">
+                <span class="search-icon-box">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </span>
+                <input type="text" id="modstore-search-input" class="mods-search-input" placeholder="Search mods (e.g. Sodium, Iris, Create, AppleSkin, JourneyMap, FerriteCore)..." autocomplete="off" spellcheck="false">
+                <button type="button" id="btn-clear-mod-search" class="btn-clear-search" style="display:none;" title="Clear search">✕</button>
+              </div>
+
+              <!-- Categories with Pure Vector SVGs -->
+              <div class="mods-categories-row">
+                <button type="button" class="hub-filter-chip active" data-modcat="all">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                  <span>All</span>
+                </button>
+                <button type="button" class="hub-filter-chip" data-modcat="optimization">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                  <span>Optimization / FPS</span>
+                </button>
+                <button type="button" class="hub-filter-chip" data-modcat="technology">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                  <span>Technology</span>
+                </button>
+                <button type="button" class="hub-filter-chip" data-modcat="adventure">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 17 17 19 3 5 5 3"></polygon><path d="m14.5 9.5 5 5"></path><path d="m3 21 3-3"></path><path d="m9.5 14.5 5 5"></path></svg>
+                  <span>Adventure</span>
+                </button>
+                <button type="button" class="hub-filter-chip" data-modcat="decoration">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"></circle><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"></circle><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"></circle><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"></circle><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"></path></svg>
+                  <span>Decoration</span>
+                </button>
+                <button type="button" class="hub-filter-chip" data-modcat="utility">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                  <span>Utility</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Mod Cards Grid (Full viewport flex, smooth scrolling, generous cards) -->
+            <div class="modstore-cards-grid" id="modstore-cards-grid">
+              <div class="hub-loading-state">
+                <div class="hub-spinner"></div>
+                <span>Loading popular Minecraft mods from Modrinth...</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- SUB-PANE 2: INSTALLED MODS MANAGER -->
+          <div class="hub-subpane" id="subpane-installedmods" style="display: none;">
+            <div class="installed-mods-container">
+              <div class="installed-mods-table-header">
+                <span>MODIFICATION FILE</span>
+                <span>FILE SIZE</span>
+                <span>ACTION</span>
+              </div>
+              <div class="mods-items-list" id="mods-items-list">
+                <div class="mods-empty-placeholder">Scanning mods directory...</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- MOD DETAILS MODAL (GALLERY, DESCRIPTION & VERSION PICKER) -->
+          <div class="mod-details-modal" id="mod-details-modal" style="display: none;">
+            <!-- Modal Top Control Bar -->
+            <div class="details-topbar">
+              <button type="button" class="btn-details-back" id="btn-details-back" title="Back to mod catalog (ESC)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+                <span>BACK TO CATALOG</span>
+              </button>
+              <div class="details-top-actions">
+                <button type="button" class="btn-details-close" id="btn-details-close" title="Close (ESC)">
+                  <svg width="12" height="12" viewBox="0 0 11 11"><path d="M1 1L10 10M10 1L1 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Modal Content (Scrollable) -->
+            <div class="details-scroll-content" id="details-scroll-content">
+              <!-- Loading State Placeholder -->
+              <div class="details-loader-state" id="details-loader-state">
+                <div class="hub-spinner"></div>
+                <span>Loading mod details from Modrinth...</span>
+              </div>
+
+              <!-- Main Details Container (Hidden until loaded) -->
+              <div class="details-main-body" id="details-main-body" style="display: none;">
+                
+                <!-- Hero Header Card -->
+                <div class="details-hero-card">
+                  <div class="details-hero-left">
+                    <img id="details-mod-icon" src="" alt="Mod Icon" class="details-mod-icon">
+                    <div class="details-hero-meta">
+                      <div class="details-hero-badge-row">
+                        <span class="mods-glow-tag" id="details-client-server-tag">CLIENT &amp; SERVER</span>
+                        <span class="mod-tag-chip tag-downloads" id="details-downloads-chip">
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                          <span id="details-downloads-count">0</span>
+                        </span>
+                        <span class="mod-tag-chip" id="details-followers-chip">
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                          <span id="details-followers-count">0</span>
+                        </span>
+                      </div>
+                      <h2 class="details-mod-title" id="details-mod-title">Mod Title</h2>
+                      <p class="details-mod-summary" id="details-mod-summary">Short summary of what this mod does.</p>
+                      <div class="details-categories-list" id="details-categories-list">
+                        <!-- Populated dynamically -->
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Quick Install for Current Minecraft Version -->
+                  <div class="details-hero-action">
+                    <button type="button" class="btn-grand-install" id="btn-details-quick-install">
+                      <div class="launch-ambient-sheen"></div>
+                      <span class="install-symbol">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                      </span>
+                      <span id="details-quick-install-text">INSTALL FOR ACTIVE VERSION</span>
+                    </button>
+                    <span class="details-quick-target-label" id="details-quick-target-label">Target: Fabric 1.21.4</span>
+                  </div>
+                </div>
+
+                <!-- Navigation Tabs: Overview & Screenshots vs Versions & Downloads -->
+                <div class="details-nav-tabs">
+                  <button type="button" class="details-tab-btn active" id="btn-details-tab-overview" data-detailstab="overview">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                    <span>OVERVIEW &amp; GALLERY</span>
+                  </button>
+                  <button type="button" class="details-tab-btn" id="btn-details-tab-versions" data-detailstab="versions">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                    <span>VERSIONS &amp; FILES</span>
+                    <span class="details-tab-badge" id="details-versions-total-badge">0</span>
+                  </button>
+                </div>
+
+                <!-- SUBSECTION 1: OVERVIEW & SCREENSHOT GALLERY -->
+                <div class="details-tab-content active" id="details-content-overview">
+                  <!-- Screenshot Gallery Carousel (if available) -->
+                  <div class="details-gallery-section" id="details-gallery-section" style="display: none;">
+                    <div class="gallery-section-header">
+                      <div class="gallery-title-group">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                        <span>SCREENSHOTS &amp; MEDIA</span>
+                      </div>
+                      <span class="gallery-counter-tag" id="gallery-counter-tag">1 / 1</span>
+                    </div>
+
+                    <!-- Main Featured Preview Display -->
+                    <div class="gallery-main-viewport">
+                      <img id="gallery-main-img" src="" alt="Screenshot" class="gallery-main-img">
+                      <div class="gallery-caption-overlay" id="gallery-caption-overlay">
+                        <span class="gallery-caption-title" id="gallery-caption-title">Screenshot Title</span>
+                        <span class="gallery-caption-sub" id="gallery-caption-sub">Description</span>
+                      </div>
+                    </div>
+
+                    <!-- Horizontal Thumbnails Strip -->
+                    <div class="gallery-thumbnails-strip" id="gallery-thumbnails-strip">
+                      <!-- Populated dynamically -->
+                    </div>
+                  </div>
+
+                  <!-- Markdown Description Article -->
+                  <div class="details-description-section">
+                    <div class="description-section-header">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                      <span>DESCRIPTION &amp; DOCUMENTATION</span>
+                    </div>
+                    <div class="mod-markdown-body" id="mod-markdown-body">
+                      <!-- Rendered Markdown HTML -->
+                    </div>
+                  </div>
+                </div>
+
+                <!-- SUBSECTION 2: VERSIONS BROWSER & SELECTOR -->
+                <div class="details-tab-content" id="details-content-versions" style="display: none;">
+                  <!-- Filter Control Strip for Versions -->
+                  <div class="versions-filter-strip">
+                    <!-- Minecraft Version Filter -->
+                    <div class="version-filter-item">
+                      <label class="unit-label">MINECRAFT VERSION</label>
+                      <div class="version-select-box">
+                        <select id="details-filter-game-version" class="details-select-input">
+                          <option value="all">All Minecraft Versions</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <!-- Mod Loader Filter -->
+                    <div class="version-filter-item">
+                      <label class="unit-label">MOD LOADER</label>
+                      <div class="version-loader-pills" id="details-loader-pills">
+                        <button type="button" class="vloader-pill active" data-vloader="all">All</button>
+                        <button type="button" class="vloader-pill" data-vloader="fabric">Fabric</button>
+                        <button type="button" class="vloader-pill" data-vloader="forge">Forge</button>
+                        <button type="button" class="vloader-pill" data-vloader="neoforge">NeoForge</button>
+                        <button type="button" class="vloader-pill" data-vloader="quilt">Quilt</button>
+                      </div>
+                    </div>
+
+                    <!-- Search Filter for Version Name / Number -->
+                    <div class="version-filter-item version-search-item">
+                      <label class="unit-label">SEARCH RELEASE</label>
+                      <input type="text" id="details-version-search" class="orbit-text-input details-vsearch-input" placeholder="Search version (e.g. 0.5.8, beta)...">
+                    </div>
+                  </div>
+
+                  <!-- Versions Table / List -->
+                  <div class="details-versions-table">
+                    <div class="details-versions-header">
+                      <span>RELEASE &amp; FILE</span>
+                      <span>COMPATIBILITY</span>
+                      <span>LOADERS</span>
+                      <span>DATE / STATS</span>
+                      <span style="text-align: right;">ACTION</span>
+                    </div>
+                    <div class="details-versions-rows" id="details-versions-rows">
+                      <!-- Populated dynamically -->
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB: SERVERS & MULTIPLAYER HUB -->
+        <section id="tab-servers" class="stage-pane">
+          <div class="pane-headline">
+            <div>
+              <h2 class="headline-title">SERVERS &amp; MULTIPLAYER HUB</h2>
+              <p class="headline-sub">Real-time ping monitor, quick join for LAN / Radmin VPN, and server catalog</p>
+            </div>
+            <div class="headline-actions">
+              <button id="btn-add-server-toggle" class="btn-primary-action" title="Add a new server">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <span>Add Server</span>
+              </button>
+              <button id="btn-refresh-servers" class="btn-secondary-action" title="Ping all servers">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                <span>Ping All</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Add Server Drawer / Card (Collapsible) -->
+          <div class="settings-card add-server-form-card" id="add-server-card" style="display: none;">
+            <div class="settings-card-header">
+              <h3 class="settings-card-title">Add Minecraft Server</h3>
+              <button type="button" class="btn-tiny-action" id="btn-cancel-add-server">Close</button>
+            </div>
+            <div class="add-server-form-grid">
+              <div class="setting-field">
+                <label class="unit-label">SERVER NAME</label>
+                <input type="text" id="new-server-name" class="orbit-text-input" placeholder="e.g. My Friend LAN / Hypixel">
+              </div>
+              <div class="setting-field">
+                <label class="unit-label">SERVER ADDRESS (IP OR DOMAIN)</label>
+                <input type="text" id="new-server-host" class="orbit-text-input" placeholder="e.g. 26.12.34.56 or mc.hypixel.net">
+              </div>
+              <div class="setting-field">
+                <label class="unit-label">PORT (DEFAULT 25565)</label>
+                <input type="number" id="new-server-port" class="orbit-text-input" value="25565" min="1" max="65535">
+              </div>
+            </div>
+            <div class="add-server-footer">
+              <button type="button" class="btn-accent-apply" id="btn-save-new-server">Save &amp; Ping Server</button>
+            </div>
+          </div>
+
+          <!-- Servers Cards Grid -->
+          <div class="servers-cards-grid" id="servers-cards-grid">
+            <div class="hub-loading-state">
+              <div class="hub-spinner"></div>
+              <span>Checking server status and ping...</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB: SCREENSHOTS & SNAPS GALLERY -->
+        <section id="tab-screenshots" class="stage-pane">
+          <div class="pane-headline">
+            <div>
+              <h2 class="headline-title">SCREENSHOTS GALLERY</h2>
+              <p class="headline-sub">Browse in-game memories, 1-click copy to clipboard for Discord, and view fullscreen</p>
+            </div>
+            <div class="headline-actions">
+              <button id="btn-open-screenshots-folder" class="btn-secondary-action" title="Open screenshots folder in Explorer">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                <span>Open Folder</span>
+              </button>
+              <button id="btn-refresh-screenshots" class="btn-secondary-action" title="Reload screenshots">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                <span>Refresh</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Screenshots Grid -->
+          <div class="screenshots-grid-container" id="screenshots-grid-container">
+            <div class="hub-loading-state">
+              <div class="hub-spinner"></div>
+              <span>Scanning screenshots...</span>
+            </div>
+          </div>
+
+          <!-- Lightbox Fullscreen Modal -->
+          <div class="screenshot-lightbox-modal" id="screenshot-lightbox-modal" style="display: none;">
+            <div class="lightbox-overlay" id="lightbox-backdrop"></div>
+            <div class="lightbox-dialog">
+              <div class="lightbox-topbar">
+                <span class="lightbox-title" id="lightbox-filename">screenshot.png</span>
+                <div class="lightbox-actions">
+                  <button type="button" class="btn-viewer-tool" id="btn-lightbox-copy" title="Copy to clipboard">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    <span>Copy</span>
+                  </button>
+                  <button type="button" class="btn-viewer-tool" id="btn-lightbox-open" title="Show in folder">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                    <span>Reveal</span>
+                  </button>
+                  <button type="button" class="btn-viewer-tool btn-close-win" id="btn-lightbox-close" title="Close (ESC)">
+                    <svg width="12" height="12" viewBox="0 0 11 11"><path d="M1 1L10 10M10 1L1 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                  </button>
+                </div>
+              </div>
+              <div class="lightbox-image-wrap">
+                <img id="lightbox-img" src="" alt="Screenshot Fullscreen">
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 3: SETTINGS -->
+        <section id="tab-settings" class="stage-pane">
+          <div class="pane-headline">
+            <div>
+              <h2 class="headline-title">SYSTEM SETTINGS</h2>
+              <p class="headline-sub">Memory allocation, Java 21 runtime path, and launcher behavior</p>
+            </div>
+            <button id="btn-save-settings" class="btn-save-action">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                <polyline points="7 3 7 8 15 8"></polyline>
+              </svg>
+              <span>Save Changes</span>
+            </button>
+          </div>
+
+          <div class="settings-grid-stack">
+            <!-- RAM Allocation Box with EXACT Aligned Notches -->
+            <div class="settings-card">
+              <div class="settings-card-header">
+                <div>
+                  <h3 class="settings-card-title">Memory Allocation (RAM)</h3>
+                  <p class="settings-card-sub">Drag slider or click values below to allocate dedicated memory</p>
+                </div>
+                <div class="ram-value-pill" id="ram-value-badge">4 GB</div>
+              </div>
+              
+              <!-- Clean Aligned RAM Slider Component -->
+              <div class="slider-module">
+                <input type="range" id="ram-slider" min="2" max="12" step="1" value="4" class="custom-range-slider">
+                
+                <!-- Perfectly Aligned Clickable Notches (Values: 2, 4, 6, 8, 10, 12) -->
+                <div class="ram-notch-bar">
+                  <span class="notch-chip" data-ram="2" style="left: 0%;">2 GB</span>
+                  <span class="notch-chip active" data-ram="4" style="left: 20%;">4 GB</span>
+                  <span class="notch-chip" data-ram="6" style="left: 40%;">6 GB</span>
+                  <span class="notch-chip" data-ram="8" style="left: 60%;">8 GB</span>
+                  <span class="notch-chip" data-ram="10" style="left: 80%;">10 GB</span>
+                  <span class="notch-chip" data-ram="12" style="left: 100%;">12 GB</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- System Paths -->
+            <div class="settings-card">
+              <h3 class="settings-card-title">System Paths</h3>
+              
+              <div class="input-field-group">
+                <label for="input-gamedir">Game Directory (.minecraft / game)</label>
+                <div class="input-with-button">
+                  <input type="text" id="input-gamedir" class="orbit-text-input" spellcheck="false">
+                  <button id="btn-browse-gamedir" class="btn-input-accessory">BROWSE</button>
+                </div>
+              </div>
+
+              <div class="input-field-group">
+                <label for="input-javapath">Java 21 Executable (javaw.exe)</label>
+                <div class="input-with-button">
+                  <input type="text" id="input-javapath" class="orbit-text-input" spellcheck="false">
+                  <button id="btn-browse-javapath" class="btn-input-accessory">DETECT</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Launch Options -->
+            <div class="settings-card">
+              <h3 class="settings-card-title">Launch Behavior</h3>
+              <label class="orbit-checkbox-label">
+                <input type="checkbox" id="toggle-autoclose">
+                <span class="orbit-checkbox-box"></span>
+                <span class="orbit-checkbox-text">Automatically close launcher after Minecraft process starts successfully</span>
+              </label>
+            </div>
+
+            <!-- Launcher Updates & Distribution Card -->
+            <div class="settings-card">
+              <div class="settings-card-header">
+                <div>
+                  <h3 class="settings-card-title">Client Updates &amp; Version</h3>
+                  <p class="settings-card-sub">Connected to official repository: <code style="color: var(--red-400); font-family: var(--font-mono);">Loshara228ss/orbitlauncher</code></p>
+                </div>
+                <div class="ram-value-pill" id="current-version-badge" style="background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.3); color: #fca5a5;">v1.0.0</div>
+              </div>
+              <div class="update-action-row" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px;">
+                <div class="update-status-msg" id="update-manual-status" style="font-size: 11.5px; color: var(--text-med); font-family: var(--font-mono);">
+                  Click check to scan for latest release
+                </div>
+                <button type="button" id="btn-check-updates-manual" class="btn-save-action" style="padding: 7px 14px; font-size: 11px;">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                  <span id="btn-check-updates-text">CHECK FOR UPDATES</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- UPDATE MODAL (OBSIDIAN & CRIMSON) -->
+  <div id="update-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-card update-modal-card">
+      <div class="modal-header">
+        <div class="modal-title-row">
+          <span class="update-pulse-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          </span>
+          <div class="modal-title-wrap">
+            <h3 class="modal-heading">NEW UPDATE AVAILABLE</h3>
+            <span class="modal-subheading" id="update-version-subtitle">Orbit Launcher Update</span>
+          </div>
+        </div>
+        <button type="button" class="btn-close-modal" id="btn-close-update">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <div class="modal-body update-modal-body">
+        <div class="update-meta-chips">
+          <span class="update-chip chip-current" id="update-chip-current">Current: v1.0.0</span>
+          <span class="update-chip chip-new" id="update-chip-new">New: v1.0.1</span>
+          <span class="update-chip chip-size" id="update-chip-size">~220 MB</span>
+        </div>
+
+        <div class="update-notes-container">
+          <div class="update-notes-title">RELEASE NOTES &amp; CHANGELOG</div>
+          <div class="update-notes-box" id="update-notes-box">
+            Loading changelog...
+          </div>
+        </div>
+
+        <!-- Download progress bar -->
+        <div class="update-download-box" id="update-download-box" style="display: none;">
+          <div class="update-progress-labels">
+            <span id="update-status-text">Downloading update...</span>
+            <span id="update-progress-num">0%</span>
+          </div>
+          <div class="update-progress-track">
+            <div class="update-progress-fill" id="update-progress-fill" style="width: 0%;"></div>
+          </div>
+          <div class="update-speed-labels">
+            <span id="update-speed-text">0.0 MB/s</span>
+            <span id="update-downloaded-text">0 / 0 MB</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer update-modal-footer">
+        <button type="button" class="btn-secondary" id="btn-cancel-update">LATER</button>
+        <button type="button" class="btn-crimson" id="btn-do-update">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <span id="btn-do-update-text">DOWNLOAD &amp; INSTALL</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
