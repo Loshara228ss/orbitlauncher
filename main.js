@@ -349,6 +349,58 @@ async function ensureFabricProfile(gameDir, selectedVersion) {
   }
 }
 
+async function downloadWithProgressAndFallback(urls, label, sendStatus) {
+  let lastErr = null;
+  for (const url of urls) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000);
+
+      const res = await fetch(url, {
+        signal: controller.signal,
+        headers: { 'User-Agent': 'OrbitLauncher/1.0.2' }
+      });
+      clearTimeout(timeoutId);
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const totalBytes = parseInt(res.headers.get('content-length') || '0', 10);
+      const reader = res.body.getReader();
+      const chunks = [];
+      let receivedBytes = 0;
+      let lastReportTime = 0;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+        receivedBytes += value.length;
+
+        const now = Date.now();
+        if (now - lastReportTime > 300 || done) {
+          lastReportTime = now;
+          if (sendStatus) {
+            const dlMb = (receivedBytes / (1024 * 1024)).toFixed(1);
+            if (totalBytes > 0) {
+              const totMb = (totalBytes / (1024 * 1024)).toFixed(1);
+              const pct = Math.min(100, Math.round((receivedBytes / totalBytes) * 100));
+              sendStatus(`${label} (${dlMb} / ${totMb} MB - ${pct}%)...`, 'info');
+            } else {
+              sendStatus(`${label} (${dlMb} MB)...`, 'info');
+            }
+          }
+        }
+      }
+
+      return Buffer.concat(chunks.map(c => Buffer.from(c)));
+    } catch (err) {
+      console.warn(`[Download] Mirror failed (${url}):`, err.message);
+      lastErr = err;
+    }
+  }
+  throw lastErr || new Error('All download mirrors failed');
+}
+
 async function ensureForgeProfile(gameDir, selectedVersion, sendStatus) {
   const targetDir = path.join(gameDir, 'versions', selectedVersion);
   const targetJson = path.join(targetDir, `${selectedVersion}.json`);
@@ -365,18 +417,22 @@ async function ensureForgeProfile(gameDir, selectedVersion, sendStatus) {
 
   try {
     const res = await fetch(`https://bmclapi2.bangbang93.com/forge/minecraft/${mcVer}`);
-    if (!res.ok) throw new Error(`BMCLAPI Forge list HTTP ${res.status}`);
+    if (!res.ok) throw new Error(`Forge list HTTP ${res.status}`);
     const list = await res.json();
     if (!Array.isArray(list) || list.length === 0) throw new Error('No Forge versions found for ' + mcVer);
 
     const latest = list[list.length - 1] || list[0];
     const forgeVer = latest.version;
-    const dlUrl = `https://bmclapi2.bangbang93.com/forge/download?mcversion=${mcVer}&version=${forgeVer}&category=installer&format=jar`;
+    const dlUrls = [
+      `https://maven.minecraftforge.net/net/minecraftforge/forge/${mcVer}-${forgeVer}/forge-${mcVer}-${forgeVer}-installer.jar`,
+      `https://bmclapi2.bangbang93.com/forge/download?mcversion=${mcVer}&version=${forgeVer}&category=installer&format=jar`
+    ];
 
-    if (sendStatus) sendStatus(`Downloading Forge ${forgeVer} installer...`, 'info');
-    const installerRes = await fetch(dlUrl);
-    if (!installerRes.ok) throw new Error(`Forge download HTTP ${installerRes.status}`);
-    const installerBuffer = Buffer.from(await installerRes.arrayBuffer());
+    const installerBuffer = await downloadWithProgressAndFallback(
+      dlUrls,
+      `Downloading Forge ${forgeVer} installer`,
+      sendStatus
+    );
 
     const zip = new AdmZip(installerBuffer);
     const vEntry = zip.getEntry('version.json');
@@ -437,18 +493,22 @@ async function ensureNeoForgeProfile(gameDir, selectedVersion, sendStatus) {
 
   try {
     const res = await fetch(`https://bmclapi2.bangbang93.com/neoforge/list/${mcVer}`);
-    if (!res.ok) throw new Error(`BMCLAPI NeoForge list HTTP ${res.status}`);
+    if (!res.ok) throw new Error(`NeoForge list HTTP ${res.status}`);
     const list = await res.json();
     if (!Array.isArray(list) || list.length === 0) throw new Error('No NeoForge versions found for ' + mcVer);
 
     const latest = list[list.length - 1] || list[0];
     const neoVer = latest.version;
-    const dlUrl = `https://bmclapi2.bangbang93.com/maven/net/neoforged/neoforge/${neoVer}/neoforge-${neoVer}-installer.jar`;
+    const dlUrls = [
+      `https://maven.neoforged.net/releases/net/neoforged/neoforge/${neoVer}/neoforge-${neoVer}-installer.jar`,
+      `https://bmclapi2.bangbang93.com/maven/net/neoforged/neoforge/${neoVer}/neoforge-${neoVer}-installer.jar`
+    ];
 
-    if (sendStatus) sendStatus(`Downloading NeoForge ${neoVer} installer...`, 'info');
-    const installerRes = await fetch(dlUrl);
-    if (!installerRes.ok) throw new Error(`NeoForge download HTTP ${installerRes.status}`);
-    const installerBuffer = Buffer.from(await installerRes.arrayBuffer());
+    const installerBuffer = await downloadWithProgressAndFallback(
+      dlUrls,
+      `Downloading NeoForge ${neoVer} installer`,
+      sendStatus
+    );
 
     const zip = new AdmZip(installerBuffer);
     const vEntry = zip.getEntry('version.json');
