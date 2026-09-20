@@ -1,6 +1,6 @@
 ; Inno Setup 6 Script for Orbit Launcher
 #define MyAppName "Orbit Launcher"
-#define MyAppVersion "1.0.3"
+#define MyAppVersion "1.0.4"
 #define MyAppPublisher "Orbit Team"
 #define MyAppExeName "OrbitLauncher.exe"
 #define MyOutputDir "C:\Users\Atuka\Desktop\Idk"

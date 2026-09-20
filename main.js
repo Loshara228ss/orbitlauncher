@@ -358,7 +358,7 @@ async function downloadWithProgressAndFallback(urls, label, sendStatus) {
 
       const res = await fetch(url, {
         signal: controller.signal,
-        headers: { 'User-Agent': 'OrbitLauncher/1.0.2' }
+        headers: { 'User-Agent': 'OrbitLauncher/1.0.4' }
       });
       clearTimeout(timeoutId);
 
@@ -401,19 +401,87 @@ async function downloadWithProgressAndFallback(urls, label, sendStatus) {
   throw lastErr || new Error('All download mirrors failed');
 }
 
+async function ensureBaseMinecraftJar(gameDir, mcVer, sendStatus) {
+  const vDir = path.join(gameDir, 'versions', mcVer);
+  const vJar = path.join(vDir, `${mcVer}.jar`);
+  const vJson = path.join(vDir, `${mcVer}.json`);
+  if (fs.existsSync(vJar) && fs.existsSync(vJson)) {
+    return true;
+  }
+  if (!fs.existsSync(vDir)) fs.mkdirSync(vDir, { recursive: true });
+
+  if (sendStatus) sendStatus(`Downloading base Minecraft ${mcVer} files...`, 'info');
+  try {
+    const mfRes = await fetch('https://piston-meta.mojang.com/mc/game/version_manifest_v2.json');
+    if (!mfRes.ok) throw new Error(`Manifest HTTP ${mfRes.status}`);
+    const mf = await mfRes.json();
+    const verEntry = (mf.versions || []).find(v => v.id === mcVer);
+    if (!verEntry || !verEntry.url) throw new Error(`Version ${mcVer} not found in Mojang manifest`);
+
+    const verRes = await fetch(verEntry.url);
+    if (!verRes.ok) throw new Error(`Version metadata HTTP ${verRes.status}`);
+    const verDetails = await verRes.json();
+    fs.writeFileSync(vJson, JSON.stringify(verDetails, null, 2), 'utf8');
+
+    if (verDetails.downloads && verDetails.downloads.client && verDetails.downloads.client.url) {
+      const clientUrl = verDetails.downloads.client.url;
+      const buf = await downloadWithProgressAndFallback(
+        [clientUrl],
+        `Downloading Minecraft ${mcVer} client jar`,
+        sendStatus
+      );
+      fs.writeFileSync(vJar, buf);
+    }
+    return true;
+  } catch (err) {
+    console.error(`Failed to download base Minecraft ${mcVer}:`, err);
+    return false;
+  }
+}
+
+function runInstallerClient(javaExe, installerJarPath, gameDir, sendStatus) {
+  return new Promise((resolve, reject) => {
+    if (sendStatus) sendStatus('Preparing client libraries with loader installer...', 'info');
+    const child = spawn(javaExe || 'javaw', ['-jar', installerJarPath, '--installClient', gameDir], {
+      windowsHide: true
+    });
+    let output = '';
+    child.stdout.on('data', (d) => {
+      const text = d.toString();
+      output += text;
+      const lastLine = text.trim().split('\n').pop();
+      if (lastLine && sendStatus && (lastLine.includes('Extracting') || lastLine.includes('Downloading') || lastLine.includes('Patching') || lastLine.includes('Splitting') || lastLine.includes('Processor'))) {
+        sendStatus(lastLine.trim(), 'debug');
+      }
+    });
+    child.stderr.on('data', (d) => {
+      output += d.toString();
+    });
+    child.on('close', (code) => {
+      if (code === 0) {
+        if (sendStatus) sendStatus('Client libraries successfully patched and installed!', 'success');
+        resolve(true);
+      } else {
+        console.error('Installer exited with code', code, output);
+        reject(new Error(`Installer failed with exit code ${code}`));
+      }
+    });
+    child.on('error', (err) => {
+      reject(err);
+    });
+  });
+}
+
 async function ensureForgeProfile(gameDir, selectedVersion, sendStatus) {
   const targetDir = path.join(gameDir, 'versions', selectedVersion);
   const targetJson = path.join(targetDir, `${selectedVersion}.json`);
-  if (fs.existsSync(targetJson)) {
-    sanitizeVersionJson(gameDir, selectedVersion);
-    return true;
-  }
 
   const match = selectedVersion.match(/(\d+\.\d+(\.\d+)?)/);
   if (!match) return false;
   const mcVer = match[1];
 
-  if (sendStatus) sendStatus(`Downloading Forge loader profile for Minecraft ${mcVer}...`, 'info');
+  const intSub = parseInt(mcVer.split('.')[1] || '0', 10);
+  const isModernForge = intSub >= 17;
 
   try {
     const res = await fetch(`https://bmclapi2.bangbang93.com/forge/minecraft/${mcVer}`);
@@ -423,49 +491,58 @@ async function ensureForgeProfile(gameDir, selectedVersion, sendStatus) {
 
     const latest = list[list.length - 1] || list[0];
     const forgeVer = latest.version;
-    const dlUrls = [
-      `https://maven.minecraftforge.net/net/minecraftforge/forge/${mcVer}-${forgeVer}/forge-${mcVer}-${forgeVer}-installer.jar`,
-      `https://bmclapi2.bangbang93.com/forge/download?mcversion=${mcVer}&version=${forgeVer}&category=installer&format=jar`
-    ];
-
-    const installerBuffer = await downloadWithProgressAndFallback(
-      dlUrls,
-      `Downloading Forge ${forgeVer} installer`,
-      sendStatus
-    );
-
-    const zip = new AdmZip(installerBuffer);
-    const vEntry = zip.getEntry('version.json');
-    if (!vEntry) throw new Error('version.json missing in Forge installer');
-
-    const vJson = JSON.parse(vEntry.getData().toString('utf8'));
-    vJson.id = selectedVersion;
-    if (!vJson.inheritsFrom) vJson.inheritsFrom = mcVer;
-
-    if (!fs.existsSync(targetDir)) {
-      fs.mkdirSync(targetDir, { recursive: true });
-    }
-    fs.writeFileSync(targetJson, JSON.stringify(vJson, null, 2), 'utf8');
-
-    // Extract bundled maven libraries from installer into gameDir/libraries
-    try {
-      const zipEntries = zip.getEntries();
-      for (const entry of zipEntries) {
-        if (!entry.isDirectory && entry.entryName.startsWith('maven/')) {
-          const relPath = entry.entryName.substring('maven/'.length);
-          const destPath = path.join(gameDir, 'libraries', relPath);
-          const destDir = path.dirname(destPath);
-          if (!fs.existsSync(destDir)) fs.mkdirSync(destDir, { recursive: true });
-          fs.writeFileSync(destPath, entry.getData());
-        }
-      }
-    } catch (zipErr) {
-      console.warn('Could not extract bundled maven libraries:', zipErr.message);
-    }
-
     const installersDir = path.join(gameDir, 'installers');
     if (!fs.existsSync(installersDir)) fs.mkdirSync(installersDir, { recursive: true });
-    fs.writeFileSync(path.join(installersDir, `forge-${mcVer}-${forgeVer}-installer.jar`), installerBuffer);
+    const installerFile = path.join(installersDir, `forge-${mcVer}-${forgeVer}-installer.jar`);
+
+    const clientJar = path.join(gameDir, 'libraries', 'net', 'minecraftforge', 'forge', `${mcVer}-${forgeVer}`, `forge-${mcVer}-${forgeVer}-client.jar`);
+    const isAlreadyInstalled = fs.existsSync(targetJson) && (!isModernForge || fs.existsSync(clientJar));
+    if (isAlreadyInstalled) {
+      sanitizeVersionJson(gameDir, selectedVersion);
+      return true;
+    }
+
+    await ensureBaseMinecraftJar(gameDir, mcVer, sendStatus);
+
+    if (!fs.existsSync(installerFile)) {
+      const dlUrls = [
+        `https://maven.minecraftforge.net/net/minecraftforge/forge/${mcVer}-${forgeVer}/forge-${mcVer}-${forgeVer}-installer.jar`,
+        `https://bmclapi2.bangbang93.com/forge/download?mcversion=${mcVer}&version=${forgeVer}&category=installer&format=jar`
+      ];
+
+      const installerBuffer = await downloadWithProgressAndFallback(
+        dlUrls,
+        `Downloading Forge ${forgeVer} installer`,
+        sendStatus
+      );
+      fs.writeFileSync(installerFile, installerBuffer);
+    }
+
+    if (isModernForge && !fs.existsSync(clientJar)) {
+      const optimalJava = await getOptimalJavaPath(selectedVersion, null, sendStatus);
+      const javaExe = optimalJava && optimalJava !== 'javaw' ? optimalJava : 'java';
+      await runInstallerClient(javaExe, installerFile, gameDir, sendStatus);
+    }
+
+    // Ensure version JSON exists
+    const installerVersionJson = path.join(gameDir, 'versions', `${mcVer}-forge-${forgeVer}`, `${mcVer}-forge-${forgeVer}.json`);
+    let vJson = null;
+    if (fs.existsSync(installerVersionJson)) {
+      vJson = JSON.parse(fs.readFileSync(installerVersionJson, 'utf8'));
+    } else if (fs.existsSync(installerFile)) {
+      const zip = new AdmZip(installerFile);
+      const vEntry = zip.getEntry('version.json');
+      if (vEntry) {
+        vJson = JSON.parse(vEntry.getData().toString('utf8'));
+      }
+    }
+
+    if (vJson) {
+      vJson.id = selectedVersion;
+      if (!vJson.inheritsFrom) vJson.inheritsFrom = mcVer;
+      if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
+      fs.writeFileSync(targetJson, JSON.stringify(vJson, null, 2), 'utf8');
+    }
 
     sanitizeVersionJson(gameDir, selectedVersion);
     if (sendStatus) sendStatus(`Forge ${forgeVer} profile configured successfully!`, 'success');
@@ -480,16 +557,10 @@ async function ensureForgeProfile(gameDir, selectedVersion, sendStatus) {
 async function ensureNeoForgeProfile(gameDir, selectedVersion, sendStatus) {
   const targetDir = path.join(gameDir, 'versions', selectedVersion);
   const targetJson = path.join(targetDir, `${selectedVersion}.json`);
-  if (fs.existsSync(targetJson)) {
-    sanitizeVersionJson(gameDir, selectedVersion);
-    return true;
-  }
 
   const match = selectedVersion.match(/(\d+\.\d+(\.\d+)?)/);
   if (!match) return false;
   const mcVer = match[1];
-
-  if (sendStatus) sendStatus(`Downloading NeoForge loader profile for Minecraft ${mcVer}...`, 'info');
 
   try {
     const res = await fetch(`https://bmclapi2.bangbang93.com/neoforge/list/${mcVer}`);
@@ -499,49 +570,57 @@ async function ensureNeoForgeProfile(gameDir, selectedVersion, sendStatus) {
 
     const latest = list[list.length - 1] || list[0];
     const neoVer = latest.version;
-    const dlUrls = [
-      `https://maven.neoforged.net/releases/net/neoforged/neoforge/${neoVer}/neoforge-${neoVer}-installer.jar`,
-      `https://bmclapi2.bangbang93.com/maven/net/neoforged/neoforge/${neoVer}/neoforge-${neoVer}-installer.jar`
-    ];
-
-    const installerBuffer = await downloadWithProgressAndFallback(
-      dlUrls,
-      `Downloading NeoForge ${neoVer} installer`,
-      sendStatus
-    );
-
-    const zip = new AdmZip(installerBuffer);
-    const vEntry = zip.getEntry('version.json');
-    if (!vEntry) throw new Error('version.json missing in NeoForge installer');
-
-    const vJson = JSON.parse(vEntry.getData().toString('utf8'));
-    vJson.id = selectedVersion;
-    if (!vJson.inheritsFrom) vJson.inheritsFrom = mcVer;
-
-    if (!fs.existsSync(targetDir)) {
-      fs.mkdirSync(targetDir, { recursive: true });
-    }
-    fs.writeFileSync(targetJson, JSON.stringify(vJson, null, 2), 'utf8');
-
-    // Extract any bundled maven libraries if present
-    try {
-      const zipEntries = zip.getEntries();
-      for (const entry of zipEntries) {
-        if (!entry.isDirectory && entry.entryName.startsWith('maven/')) {
-          const relPath = entry.entryName.substring('maven/'.length);
-          const destPath = path.join(gameDir, 'libraries', relPath);
-          const destDir = path.dirname(destPath);
-          if (!fs.existsSync(destDir)) fs.mkdirSync(destDir, { recursive: true });
-          fs.writeFileSync(destPath, entry.getData());
-        }
-      }
-    } catch (zipErr) {
-      console.warn('Could not extract bundled neoforge libraries:', zipErr.message);
-    }
-
     const installersDir = path.join(gameDir, 'installers');
     if (!fs.existsSync(installersDir)) fs.mkdirSync(installersDir, { recursive: true });
-    fs.writeFileSync(path.join(installersDir, `neoforge-${neoVer}-installer.jar`), installerBuffer);
+    const installerFile = path.join(installersDir, `neoforge-${neoVer}-installer.jar`);
+
+    const clientJar = path.join(gameDir, 'libraries', 'net', 'neoforged', 'neoforge', neoVer, `neoforge-${neoVer}-client.jar`);
+    if (fs.existsSync(targetJson) && fs.existsSync(clientJar)) {
+      sanitizeVersionJson(gameDir, selectedVersion);
+      return true;
+    }
+
+    await ensureBaseMinecraftJar(gameDir, mcVer, sendStatus);
+
+    if (!fs.existsSync(installerFile)) {
+      const dlUrls = [
+        `https://maven.neoforged.net/releases/net/neoforged/neoforge/${neoVer}/neoforge-${neoVer}-installer.jar`,
+        `https://bmclapi2.bangbang93.com/maven/net/neoforged/neoforge/${neoVer}/neoforge-${neoVer}-installer.jar`
+      ];
+
+      const installerBuffer = await downloadWithProgressAndFallback(
+        dlUrls,
+        `Downloading NeoForge ${neoVer} installer`,
+        sendStatus
+      );
+      fs.writeFileSync(installerFile, installerBuffer);
+    }
+
+    if (!fs.existsSync(clientJar)) {
+      const optimalJava = await getOptimalJavaPath(selectedVersion, null, sendStatus);
+      const javaExe = optimalJava && optimalJava !== 'javaw' ? optimalJava : 'java';
+      await runInstallerClient(javaExe, installerFile, gameDir, sendStatus);
+    }
+
+    // Ensure version JSON exists
+    const installerVersionJson = path.join(gameDir, 'versions', `neoforge-${neoVer}`, `neoforge-${neoVer}.json`);
+    let vJson = null;
+    if (fs.existsSync(installerVersionJson)) {
+      vJson = JSON.parse(fs.readFileSync(installerVersionJson, 'utf8'));
+    } else if (fs.existsSync(installerFile)) {
+      const zip = new AdmZip(installerFile);
+      const vEntry = zip.getEntry('version.json');
+      if (vEntry) {
+        vJson = JSON.parse(vEntry.getData().toString('utf8'));
+      }
+    }
+
+    if (vJson) {
+      vJson.id = selectedVersion;
+      if (!vJson.inheritsFrom) vJson.inheritsFrom = mcVer;
+      if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
+      fs.writeFileSync(targetJson, JSON.stringify(vJson, null, 2), 'utf8');
+    }
 
     sanitizeVersionJson(gameDir, selectedVersion);
     if (sendStatus) sendStatus(`NeoForge ${neoVer} profile configured successfully!`, 'success');
@@ -2545,17 +2624,11 @@ ipcMain.handle('game:launch', async (event, launchConfig) => {
         await ensureFabricProfile(gameDir, selectedVersion);
       }
     } else if (lowerVer.includes('neoforge')) {
-      const hasLocalJson = fs.existsSync(path.join(gameDir, 'versions', selectedVersion, `${selectedVersion}.json`));
-      if (!hasLocalJson) {
-        sendStatus(`Setting up NeoForge profile for ${selectedVersion}...`, 'info');
-        await ensureNeoForgeProfile(gameDir, selectedVersion, sendStatus);
-      }
+      sendStatus(`Verifying NeoForge profile and libraries for ${selectedVersion}...`, 'info');
+      await ensureNeoForgeProfile(gameDir, selectedVersion, sendStatus);
     } else if (lowerVer.includes('forge')) {
-      const hasLocalJson = fs.existsSync(path.join(gameDir, 'versions', selectedVersion, `${selectedVersion}.json`));
-      if (!hasLocalJson) {
-        sendStatus(`Setting up Forge profile for ${selectedVersion}...`, 'info');
-        await ensureForgeProfile(gameDir, selectedVersion, sendStatus);
-      }
+      sendStatus(`Verifying Forge profile and libraries for ${selectedVersion}...`, 'info');
+      await ensureForgeProfile(gameDir, selectedVersion, sendStatus);
     }
 
     sendStatus(`Preparing ${selectedVersion} launch...`, 'info');
@@ -2592,7 +2665,7 @@ ipcMain.handle('game:launch', async (event, launchConfig) => {
 
     const mcMatch = selectedVersion.match(/(\d+)\.(\d+)/);
     const isLegacy = mcMatch && parseInt(mcMatch[1], 10) === 1 && parseInt(mcMatch[2], 10) <= 16;
-    const customArgs = isLegacy ? [
+    let customArgs = isLegacy ? [
       '-XX:+UseG1GC',
       '-XX:MaxGCPauseMillis=50'
     ] : [
@@ -2615,6 +2688,45 @@ ipcMain.handle('game:launch', async (event, launchConfig) => {
       '-XX:MaxTenuringThreshold=1'
     ];
 
+    // Check if the version profile defines arguments.jvm (e.g. NeoForge / Forge)
+    const verJsonPath = path.join(gameDir, 'versions', selectedVersion, `${selectedVersion}.json`);
+    const jvmArgsFromProfile = [];
+    if (fs.existsSync(verJsonPath)) {
+      try {
+        const vData = JSON.parse(fs.readFileSync(verJsonPath, 'utf8'));
+        if (vData.arguments && Array.isArray(vData.arguments.jvm)) {
+          const libDir = path.join(gameDir, 'libraries').replace(/\\/g, '/');
+          const sep = process.platform === 'win32' ? ';' : ':';
+          const mcVerStr = match ? match[1] : '';
+
+          for (const rawArg of vData.arguments.jvm) {
+            if (typeof rawArg === 'string') {
+              let resolved = rawArg
+                .replaceAll('${library_directory}', libDir)
+                .replaceAll('${classpath_separator}', sep)
+                .replaceAll('${version_name}', selectedVersion);
+
+              if (resolved.startsWith('-DignoreList=')) {
+                // Ensure duplicate module scanning of version jar is prevented
+                const extraIgnores = [
+                  'client-extra',
+                  `${selectedVersion}.jar`,
+                  `${selectedVersion.replace(/\s+/g, '-')}.jar`,
+                  `${selectedVersion.toLowerCase().replace(/\s+/g, '-')}.jar`,
+                  mcVerStr ? `${mcVerStr}.jar` : '',
+                  'client.jar'
+                ].filter(Boolean);
+                resolved = `-DignoreList=${Array.from(new Set(extraIgnores)).join(',')}`;
+              }
+              jvmArgsFromProfile.push(resolved);
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to parse arguments.jvm from version profile:', e);
+      }
+    }
+
     const optimalJava = await getOptimalJavaPath(selectedVersion, javaPath, sendStatus);
 
     const isModern = !mcMatch || (parseInt(mcMatch[1], 10) === 1 && parseInt(mcMatch[2], 10) >= 20);
@@ -2624,6 +2736,27 @@ ipcMain.handle('game:launch', async (event, launchConfig) => {
       sendStatus(errMsg, 'error');
       return { success: false, error: errMsg };
     }
+
+    if (resolvedMajor >= 17) {
+      const moduleOpens = [
+        '--add-opens=java.base/java.lang.invoke=ALL-UNNAMED',
+        '--add-opens=java.base/java.util.jar=ALL-UNNAMED',
+        '--add-opens=java.base/java.lang=ALL-UNNAMED',
+        '--add-opens=java.base/java.util=ALL-UNNAMED',
+        '--add-opens=java.base/sun.security.util=ALL-UNNAMED',
+        '--add-opens=java.base/java.io=ALL-UNNAMED',
+        '--add-opens=java.base/java.nio.file=ALL-UNNAMED',
+        '--add-opens=java.base/java.lang.reflect=ALL-UNNAMED',
+        '--add-exports=jdk.naming.dns/com.sun.jndi.dns=java.naming'
+      ];
+      for (const open of moduleOpens) {
+        if (!jvmArgsFromProfile.includes(open)) {
+          jvmArgsFromProfile.push(open);
+        }
+      }
+    }
+
+    customArgs = [...customArgs, ...jvmArgsFromProfile];
 
     const safePlayerName = (username && username.trim()) ? username.trim() : 'Player';
     const playerUuid = getOfflinePlayerUUID(safePlayerName);
@@ -2777,11 +2910,11 @@ function compareSemver(v1, v2) {
 }
 
 ipcMain.handle('app:getVersion', () => {
-  return app.getVersion() || '1.0.3';
+  return app.getVersion() || '1.0.4';
 });
 
 ipcMain.handle('updater:check', async () => {
-  const currentVersion = app.getVersion() || '1.0.3';
+  const currentVersion = app.getVersion() || '1.0.4';
   try {
     const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`, {
       headers: {
