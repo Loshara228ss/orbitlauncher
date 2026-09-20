@@ -2777,11 +2777,11 @@ function compareSemver(v1, v2) {
 }
 
 ipcMain.handle('app:getVersion', () => {
-  return app.getVersion() || '1.0.2';
+  return app.getVersion() || '1.0.3';
 });
 
 ipcMain.handle('updater:check', async () => {
-  const currentVersion = app.getVersion() || '1.0.2';
+  const currentVersion = app.getVersion() || '1.0.3';
   try {
     const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`, {
       headers: {
