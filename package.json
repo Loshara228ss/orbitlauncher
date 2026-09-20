@@ -1,6 +1,6 @@
 {
   "name": "orbit-mc-launcher",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Next-Gen Minecraft Launcher with Built-in FPS Booster",
   "main": "main.js",
   "scripts": {

@@ -200,7 +200,7 @@
         <div class="sidebar-spec-footer">
           <div class="spec-line">
             <span class="spec-label">CLIENT</span>
-            <span class="spec-val text-red" id="sidebar-client-version">Orbit 1.0.6</span>
+            <span class="spec-val text-red" id="sidebar-client-version">Orbit 1.0.7</span>
           </div>
           <div class="spec-line">
             <span class="spec-label">ENGINE</span>
@@ -1209,6 +1209,29 @@
               </label>
             </div>
 
+            <!-- Multiplayer & LAN / Radmin VPN Fixes Card -->
+            <div class="settings-card">
+              <div class="settings-card-header">
+                <div>
+                  <h3 class="settings-card-title">Сетевая игра / LAN &amp; Radmin VPN</h3>
+                  <p class="settings-card-sub">Автоматическое устранение ошибки «Недействительная сессия» (Invalid session) для локальной сети и выделенных серверов.</p>
+                </div>
+                <div class="ram-value-pill" style="background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.3); color: #86efac;">ONLINE-MODE: OFF</div>
+              </div>
+              <div style="font-size: 11.5px; color: var(--text-med); margin-top: 8px; line-height: 1.5;">
+                В Orbit Launcher встроен авто-мод для NeoForge, Forge и Fabric: при нажатии «Открыть для сети» сервер мира автоматически запускается в оффлайн-режиме, позволяя друзьям через Radmin VPN заходить без лицензии Mojang.
+              </div>
+              <div style="margin-top: 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+                <div id="server-props-status" style="font-size: 11px; color: var(--text-dim); font-family: var(--font-mono);">
+                  Для выделенного сервера: выберите папку или server.properties
+                </div>
+                <button type="button" id="btn-fix-server-props" class="btn-save-action" style="padding: 7px 14px; font-size: 11px;">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                  <span>ИСПРАВИТЬ SERVER.PROPERTIES</span>
+                </button>
+              </div>
+            </div>
+
             <!-- Launcher Updates & Distribution Card -->
             <div class="settings-card">
               <div class="settings-card-header">
@@ -1216,7 +1239,7 @@
                   <h3 class="settings-card-title">Client Updates &amp; Version</h3>
                   <p class="settings-card-sub">Connected to official repository: <code style="color: var(--red-400); font-family: var(--font-mono);">Loshara228ss/orbitlauncher</code></p>
                 </div>
-                <div class="ram-value-pill" id="current-version-badge" style="background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.3); color: #fca5a5;">v1.0.6</div>
+                <div class="ram-value-pill" id="current-version-badge" style="background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.3); color: #fca5a5;">v1.0.7</div>
               </div>
               <div class="update-action-row" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px;">
                 <div class="update-status-msg" id="update-manual-status" style="font-size: 11.5px; color: var(--text-med); font-family: var(--font-mono);">
@@ -1261,7 +1284,7 @@
 
       <div class="modal-body update-modal-body">
         <div class="update-meta-chips">
-          <span class="update-chip chip-current" id="update-chip-current">Current: v1.0.6</span>
+          <span class="update-chip chip-current" id="update-chip-current">Current: v1.0.7</span>
           <span class="update-chip chip-new" id="update-chip-new">New: v1.0.1</span>
           <span class="update-chip chip-size" id="update-chip-size">~220 MB</span>
         </div>

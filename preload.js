@@ -56,6 +56,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getServers: () => ipcRenderer.invoke('server:list'),
   saveServers: (servers) => ipcRenderer.invoke('server:save', servers),
   pingServer: (params) => ipcRenderer.invoke('server:ping', params),
+  fixServerProperties: () => ipcRenderer.invoke('server:fixProperties'),
 
   // Screenshots Gallery
   listScreenshots: (gameDir) => ipcRenderer.invoke('screenshots:list', gameDir),

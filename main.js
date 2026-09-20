@@ -359,7 +359,7 @@ async function downloadWithProgressAndFallback(urls, label, sendStatus) {
 
       const res = await fetch(url, {
         signal: controller.signal,
-        headers: { 'User-Agent': 'OrbitLauncher/1.0.6' }
+        headers: { 'User-Agent': 'OrbitLauncher/1.0.7' }
       });
       clearTimeout(timeoutId);
 
@@ -958,6 +958,86 @@ function findCustomSkinLoaderJar() {
     if (c && fs.existsSync(c)) return c;
   }
   return null;
+}
+
+function findAssetModJar(filename) {
+  const candidates = [
+    path.join(__dirname, 'assets', filename),
+    path.join(__dirname, '..', 'assets', filename),
+    path.join(process.resourcesPath || '', 'assets', filename),
+    path.join(path.dirname(process.execPath), 'assets', filename),
+    path.join('C:\\game\\Orbit Launcher\\assets', filename)
+  ];
+  for (const c of candidates) {
+    if (c && fs.existsSync(c)) return c;
+  }
+  return null;
+}
+
+function ensureMultiplayerFixes(gameDir, selectedVersion) {
+  if (!gameDir || !fs.existsSync(gameDir)) return;
+  try {
+    const modsDir = path.join(gameDir, 'mods');
+    if (!fs.existsSync(modsDir)) {
+      fs.mkdirSync(modsDir, { recursive: true });
+    }
+
+    const lower = (selectedVersion || '').toLowerCase();
+    let modJar = null;
+    let targetName = null;
+
+    if (lower.includes('neoforge')) {
+      modJar = findAssetModJar('lanserverproperties-neoforge.jar');
+      targetName = 'lanserverproperties-neoforge.jar';
+    } else if (lower.includes('forge')) {
+      modJar = findAssetModJar('lanserverproperties-forge.jar');
+      targetName = 'lanserverproperties-forge.jar';
+    } else if (lower.includes('fabric')) {
+      modJar = findAssetModJar('offlinelan-fabric.jar');
+      targetName = 'offlinelan-fabric.jar';
+    }
+
+    if (modJar && targetName) {
+      const dest = path.join(modsDir, targetName);
+      if (!fs.existsSync(dest)) {
+        fs.copyFileSync(modJar, dest);
+        console.log(`[Multiplayer Fix]: Installed ${targetName} to mods.`);
+      }
+    }
+
+    // Configure LSP onlineMode to false automatically
+    if (lower.includes('neoforge') || lower.includes('forge')) {
+      const configDir = path.join(gameDir, 'config');
+      if (!fs.existsSync(configDir)) fs.mkdirSync(configDir, { recursive: true });
+      const lspConfigPath = path.join(configDir, 'lsp.json');
+      const lspDefaults = {
+        enablePreference: true,
+        gameMode: 'SURVIVAL',
+        allowCheat: true,
+        defaultPort: 0,
+        onlineMode: false,
+        fixUUID: true,
+        allowPVP: true,
+        maxPlayer: 8,
+        playersAlwaysOffline: []
+      };
+      if (!fs.existsSync(lspConfigPath)) {
+        fs.writeFileSync(lspConfigPath, JSON.stringify(lspDefaults, null, 2), 'utf8');
+        console.log('[Multiplayer Fix]: Configured lsp.json (onlineMode: false).');
+      } else {
+        try {
+          const cur = JSON.parse(fs.readFileSync(lspConfigPath, 'utf8'));
+          if (cur.onlineMode !== false) {
+            cur.onlineMode = false;
+            fs.writeFileSync(lspConfigPath, JSON.stringify(cur, null, 2), 'utf8');
+            console.log('[Multiplayer Fix]: Updated lsp.json (onlineMode: false).');
+          }
+        } catch (e) {}
+      }
+    }
+  } catch (err) {
+    console.warn('[Multiplayer Fix Warning]:', err.message);
+  }
 }
 
 async function syncSkinToGame(gameDir, username, selectedVersion, customDataUrl, armModel) {
@@ -2129,6 +2209,41 @@ ipcMain.handle('server:ping', async (_event, { host, port = 25565 }) => {
   return await pingMinecraftServer(host, parseInt(port, 10) || 25565);
 });
 
+ipcMain.handle('server:fixProperties', async () => {
+  try {
+    const res = await dialog.showOpenDialog(mainWindow, {
+      title: 'Select server.properties or your Server Folder',
+      properties: ['openFile', 'openDirectory'],
+      filters: [
+        { name: 'Server Properties / All Files', extensions: ['properties', '*'] }
+      ]
+    });
+    if (res.canceled || !res.filePaths || res.filePaths.length === 0) {
+      return { success: false, canceled: true };
+    }
+    let target = res.filePaths[0];
+    if (fs.existsSync(target) && fs.statSync(target).isDirectory()) {
+      target = path.join(target, 'server.properties');
+    }
+    if (!fs.existsSync(target)) {
+      return { success: false, error: 'server.properties was not found in the selected folder.' };
+    }
+    let content = fs.readFileSync(target, 'utf8');
+    content = content.replace(/online-mode\s*=\s*true/g, 'online-mode=false');
+    if (!content.includes('online-mode=')) {
+      content += '\nonline-mode=false\n';
+    }
+    content = content.replace(/enforce-secure-profile\s*=\s*true/g, 'enforce-secure-profile=false');
+    if (!content.includes('enforce-secure-profile=')) {
+      content += '\nenforce-secure-profile=false\n';
+    }
+    fs.writeFileSync(target, content, 'utf8');
+    return { success: true, path: target };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
 // ==========================================================================
 // SCREENSHOTS GALLERY IPC
 // ==========================================================================
@@ -2650,6 +2765,9 @@ ipcMain.handle('game:launch', async (event, launchConfig) => {
     sendStatus('Synchronizing player skin and cosmetics...', 'info');
     await syncSkinToGame(gameDir, username, selectedVersion, launchConfig.customSkinDataUrl, launchConfig.currentArmModel);
 
+    // 0.5 Deploy multiplayer LAN fix for seamless Radmin VPN / Open to LAN support
+    ensureMultiplayerFixes(gameDir, selectedVersion);
+
     // 1. Sanitize any existing version json (remove duplicate ASM, fix native paths)
     sanitizeVersionJson(gameDir, selectedVersion);
 
@@ -2953,11 +3071,11 @@ function compareSemver(v1, v2) {
 }
 
 ipcMain.handle('app:getVersion', () => {
-  return app.getVersion() || '1.0.6';
+  return app.getVersion() || '1.0.7';
 });
 
 ipcMain.handle('updater:check', async () => {
-  const currentVersion = app.getVersion() || '1.0.6';
+  const currentVersion = app.getVersion() || '1.0.7';
   try {
     const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`, {
       headers: {

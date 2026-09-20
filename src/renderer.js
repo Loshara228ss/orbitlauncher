@@ -3068,15 +3068,15 @@ async function updateClientVersionDisplay() {
   try {
     const ver = (window.electronAPI && window.electronAPI.getAppVersion)
       ? await window.electronAPI.getAppVersion()
-      : '1.0.6';
+      : '1.0.7';
     if (ver) {
       if (currentVersionBadge) currentVersionBadge.textContent = `v${ver}`;
       if (sidebarClientVersion) sidebarClientVersion.textContent = `Orbit ${ver}`;
       if (updateChipCurrent) updateChipCurrent.textContent = `Current: v${ver}`;
     }
   } catch (e) {
-    if (currentVersionBadge) currentVersionBadge.textContent = 'v1.0.6';
-    if (sidebarClientVersion) sidebarClientVersion.textContent = 'Orbit 1.0.6';
+    if (currentVersionBadge) currentVersionBadge.textContent = 'v1.0.7';
+    if (sidebarClientVersion) sidebarClientVersion.textContent = 'Orbit 1.0.7';
   }
 }
 
@@ -3215,6 +3215,45 @@ window.electronAPI.onUpdateProgress((prog) => {
   if (updateDownloadedText) updateDownloadedText.textContent = `${prog.downloadedMb} / ${prog.totalMb} MB`;
   if (updateStatusText) updateStatusText.textContent = `Downloading ${latestUpdateData ? latestUpdateData.fileName : 'update'}...`;
 });
+
+// Dedicated Server properties fixer (offline-mode fix)
+const btnFixServerProps = document.getElementById('btn-fix-server-props');
+const serverPropsStatus = document.getElementById('server-props-status');
+
+if (btnFixServerProps) {
+  btnFixServerProps.addEventListener('click', async () => {
+    if (!window.electronAPI || !window.electronAPI.fixServerProperties) return;
+    if (serverPropsStatus) {
+      serverPropsStatus.style.color = 'var(--text-med)';
+      serverPropsStatus.textContent = 'Выбор файла/папки сервера...';
+    }
+    try {
+      const res = await window.electronAPI.fixServerProperties();
+      if (res.canceled) {
+        if (serverPropsStatus) {
+          serverPropsStatus.textContent = 'Отменено пользователем.';
+        }
+        return;
+      }
+      if (res.success) {
+        if (serverPropsStatus) {
+          serverPropsStatus.style.color = '#86efac';
+          serverPropsStatus.textContent = `Успешно: ${res.file} (online-mode=false, enforce-secure-profile=false)`;
+        }
+      } else {
+        if (serverPropsStatus) {
+          serverPropsStatus.style.color = '#fca5a5';
+          serverPropsStatus.textContent = `Ошибка: ${res.error}`;
+        }
+      }
+    } catch (err) {
+      if (serverPropsStatus) {
+        serverPropsStatus.style.color = '#fca5a5';
+        serverPropsStatus.textContent = `Ошибка: ${err.message}`;
+      }
+    }
+  });
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   initConfig();
